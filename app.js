@@ -29,6 +29,14 @@ app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
+//Ruta a panel de estadisticas
+const estadisticasRoutes = require('./routes/admin_estadisticas.routes');
+app.use(estadisticasRoutes);
+
+//Ruta al historial de ordenes
+const adminHistOrdenesRoutes = require('./routes/admin_hist_ordenes.routes');
+app.use(adminHistOrdenesRoutes);
+
 //Error 404 (La ruta no existe)
 app.use((request, response, next) => {
     response.status(404).send("La ruta no existe");
