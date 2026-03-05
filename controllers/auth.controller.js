@@ -20,6 +20,7 @@ exports.postLogin = (request, response) => {
     response.render('login', { mensaje: "Credenciales incorrectas" });
 };
 
+
 //Ruta protegida,
 //Se accede si se validan correctamente las credenciales brindadas
 exports.getHome = (request, response) => {
@@ -29,6 +30,7 @@ exports.getHome = (request, response) => {
 
     response.render('admin_home', { usuario: request.session.usuario });
 };
+
 
 //Se accede al dar clic en "Cerrar sesion"
 exports.logout = (request, response) => {
