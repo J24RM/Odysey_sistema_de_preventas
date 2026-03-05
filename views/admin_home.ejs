@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        header {
+            background: rgba(0, 120, 169, 0.1);
+            color: rgb(5, 0, 0);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header a {
+            color: rgb(0, 0, 0);
+            text-decoration: none;
+            font-weight: bold;
+            background: rgba(17, 72, 143, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .contenido {
+            padding: 40px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Bienvenido, <%= usuario %></h1>
+    <a href="/logout">Cerrar sesión</a>
+</header>
+
+<div class="contenido">
+    <div class="card">
+        <h2>Página principal del administrador</h2>
+        <p>Has iniciado sesión correctamente. Esta es una simulación de la página de inicio.</p>
+        <p>Estoy feliz por que si salio :D</p>
+    </div>
+</div>
+
+</body>
+</html>

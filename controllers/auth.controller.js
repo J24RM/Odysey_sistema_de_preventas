@@ -1,0 +1,38 @@
+// Controllers
+
+//Muestra el Login
+exports.getLogin = (request, response) => {
+    response.render('login', { mensaje: "Ingresa tus credenciales para acceder" });
+};
+
+//Ingresa credenciales
+//Para iniciar sesion de prueba:
+//Usuario: admin
+//Contraseña: nos3quep0ner
+exports.postLogin = (request, response) => {
+    const { usuario, password } = request.body;
+
+    if (usuario === "admin" && password === "nos3quep0ner") {
+        request.session.usuario = usuario;
+        return response.redirect('/admin_home');
+    }
+
+    response.render('login', { mensaje: "Credenciales incorrectas" });
+};
+
+//Ruta protegida,
+//Se accede si se validan correctamente las credenciales brindadas
+exports.getHome = (request, response) => {
+    if (!request.session.usuario) {
+        return response.redirect('/login');
+    }
+
+    response.render('admin_home', { usuario: request.session.usuario });
+};
+
+//Se accede al dar clic en "Cerrar sesion"
+exports.logout = (request, response) => {
+    request.session.destroy(() => {
+        response.redirect('/login');
+    });
+};
