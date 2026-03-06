@@ -53,10 +53,7 @@ body {
   /* HEADER — barra superior fija */
 
 header {
-    position:0;          
-    top: 0;
-    left: 0;
-    right: 0;
+    position: static;
     height: var(--header-h);
     background: var(--ppg-blue-light);
     display: flex;
@@ -156,8 +153,9 @@ header {
   /* LAYOUT — contenedor sidebar + main */
 
 .layout {
+    position: relative;
     display: flex;
-    margin-top: var(--header-h);           /* Deja espacio para el header */
+    margin-top: 0;
     min-height: calc(100vh - var(--header-h));
 }
 
@@ -168,7 +166,7 @@ aside {
     background: var(--navy);
     padding: 36px 0;
     position: absolute;
-    top: var(--header-h);
+    top: 0;
     left: 0;
     bottom: 0;
     display: flex;
@@ -201,8 +199,27 @@ aside nav a.active {
   /*  MAIN — área de contenido principal */
 main {
     margin-left: var(--sidebar-w);         
-    padding: 36px 40px;
+    padding: 8px 40px 36px;
     flex: 1;
+}
+
+.bienvenida {
+    background: linear-gradient(90deg, #ffffff 0%, #f7fbff 100%);
+    border: 1px solid #d8e7f6;
+    border-left: 6px solid var(--ppg-blue);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 12px rgba(0, 91, 171, 0.08);
+}
+
+.bienvenida h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ppg-blue);
+    line-height: 1.15;
 }
 
   /* Subtítulo de sección */
