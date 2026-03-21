@@ -57,6 +57,7 @@
         </div>
     </header>
 
+<<<<<<< HEAD:views/admin_home.ejs
     <!-- SIDEBAR -->
     <div class="w-[220px] h-[calc(100vh-70px)] bg-navy py-5 fixed top-[70px] left-0">
         <ul class="list-none p-0 m-0">
@@ -82,6 +83,19 @@
             <h2 class="m-0 font-display text-[28px] font-extrabold text-ppgblue leading-[1.15]">Bienvenido
                 administrador</h2>
         </div>
+=======
+
+
+    <div class="layout">
+        <aside>
+            <nav class="menu">
+                <a href="/admin/home" class="active">Inicio</a>
+                <a href="/admin/stats">Estadísticas</a>
+                <a href="/admin/orders">Historial de órdenes</a>
+                <a href="/admin/clients">Clientes</a>
+            </nav>
+        </aside>
+>>>>>>> 563ec9f36ebaef56e4eb58432c8cef199ffd85be:views/admin/home.ejs
 
         <section
             class="bg-cardbg rounded-2xl py-7 px-9 flex items-center justify-between gap-6 shadow-[0_2px_16px_rgba(0,91,171,0.07)] mb-7 overflow-hidden relative">
@@ -132,6 +146,7 @@
                         class="inline-block mt-2 text-[11px] font-bold bg-ppgbluelight text-ppgblue rounded-full py-[3px] px-[10px]">Sellador</span>
                 </div>
 
+<<<<<<< HEAD:views/admin_home.ejs
                 <div
                     class="border-[1.5px] border-[#e2ecf5] rounded-xl pt-5 px-4 pb-4 text-center transition-all cursor-pointer hover:shadow-[0_6px_20px_rgba(0,91,171,0.1)] hover:border-ppgblue hover:-translate-y-[3px]">
                     <div class="h-[120px] flex items-center justify-center mb-[14px]">
@@ -143,6 +158,26 @@
                     </div>
                     <span
                         class="inline-block mt-2 text-[11px] font-bold bg-ppgbluelight text-ppgblue rounded-full py-[3px] px-[10px]">Sellador</span>
+=======
+                <div class="banner-right">
+                    <img src="/img/niñoMundial.png"
+                        alt="Mundial 2026"
+                        class="banner-illustration">
+                </div>
+            </section>
+
+            <section class="actions-card">
+                <a class="btn-action btn-add btn-action-link" href="/admin/home_agregarProducto">Agregar Producto</a>
+                <a class="btn-action btn-del btn-action-link" href="/admin/home_eliminarProducto">Eliminar Producto</a>
+            </section>
+
+            <section class="catalog-card">
+                <div class="catalog-header">
+                    <h3>Catalogo de Productos</h3>
+                    <input class="search-catalog"
+                        type="text"
+                        placeholder="Buscar Productos" />
+>>>>>>> 563ec9f36ebaef56e4eb58432c8cef199ffd85be:views/admin/home.ejs
                 </div>
 
                 <div
@@ -200,6 +235,13 @@
             </div>
         </section>
     </div>
+
+    <footer class="admin-footer">
+        <div class="admin-footer-inner">
+            <img src="/img/ppg-logo.svg" alt="Logo PPG">
+            <p>The PPG logo is a registered trademark and Colorful Communities and We protect and beautify the world are trademarks of PPG Industries Ohio, Inc. © 2026 PPG Industries, Inc.All Rights Reserved</p>
+        </div>
+    </footer>
 
 </body>
 
