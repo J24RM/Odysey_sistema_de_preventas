@@ -14,33 +14,35 @@ exports.postLogin = (request, response) => {
 
     if (usuario === "admin" && password === "a") {
         request.session.usuario = usuario;
-        return response.redirect('/admin_home');
+        request.session.rol = "admin";
+        return response.redirect('/admin/home');
     }
     else if (usuario === "c" ) {
         request.session.usuario = usuario;
-        return response.redirect('/cliente_home');
+        request.session.rol = "cliente";
+        return response.redirect('/home');
     }
 
     response.render('login', { mensaje: "Credenciales incorrectas" });
 };
 
-
-//Ruta protegida,
+//Ruta protegida admin
 //Se accede si se validan correctamente las credenciales brindadas
-exports.getHome = (request, response) => {
-    if (!request.session.usuario) {
-        return response.redirect('/login');
-    }
-
-    response.render('admin_home', { usuario: request.session.usuario });
+exports.getAdminHome = (request, response) => {
+    response.render('admin/home', { usuario: request.session.usuario });
 };
 
-exports.getHomeCliente = (request, response) => {
-    if (!request.session.usuario) {
-        return response.redirect('/login');
-    }
+exports.getAdminAgregarProducto = (request, response) => {
+    response.render('admin/home_agregarProducto', { usuario: request.session.usuario });
+};
 
-    response.render('navbar', { usuario: request.session.usuario });
+exports.getAdminEliminarProducto = (request, response) => {
+    response.render('admin/home_eliminarProducto', { usuario: request.session.usuario });
+};
+
+//Ruta protegida cliente
+exports.getClienteHome = (request, response) => {
+    response.render('cliente/home', { usuario: request.session.usuario });
 };
 
 //Se accede al dar clic en "Cerrar sesion"
@@ -50,10 +52,7 @@ exports.logout = (request, response) => {
     });
 };
 
+//Ruta protegida, sirve para mostrar el perfil de usuario
 exports.getMiPerfil = (request, response) => {
-    if (!request.session.usuario) {
-        return response.redirect('/login');
-    }
-
-    response.render('', { usuario: request.session.usuario });
+    response.render('cliente/profile', { usuario: request.session.usuario });
 };
