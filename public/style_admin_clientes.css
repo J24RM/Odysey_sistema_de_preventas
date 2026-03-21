@@ -153,7 +153,7 @@ header {
 
 .admin-footer {
     background: #252f3d;
-    padding: 8px 20px;
+    padding: 12px 16px;
     margin-top: auto;
     position: relative;
     z-index: 20;
@@ -164,11 +164,11 @@ header {
     margin: 0 auto;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .admin-footer-inner img {
-    width: 86px;
+    width: 44px;
     height: auto;
     flex-shrink: 0;
 }
@@ -178,6 +178,8 @@ header {
     font-size: 13px;
     font-weight: 700;
     line-height: 1.15;
+    flex: 1;
+    text-align: center;
 }
 
 @media (max-width: 720px) {
