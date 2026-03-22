@@ -1,24 +1,66 @@
-body {
-    font-family: "Aptos", "Segoe UI Variable", "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-    background: #f3f7fb;
+/* Hoja de estilos para el Panel de Administrador PPG */
+
+
+/* RESET BÁSICO Elimina márgenes y paddings por defecto del navegador  */
+
+*, *::before, *::after {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+}
+
+  /* VARIABLES GLOBALES */
+:root {
+    --font-sans:     "Aptos", "Segoe UI Variable", "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    --font-display:  "Aptos Display", "Segoe UI Variable Display", "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+
+    /* Colores principales */
+    --navy:          #252f3d;   /* Sidebar oscuro */
+    --navy-light:    #263447;   /* Hover en sidebar */
+    --ppg-blue:      #005bab;   /* Azul corporativo PPG */
+    --ppg-blue-light:#0078A91A;   /* Azul muy claro (fondos) */
+
+    /* Botones de acción */
+    --green-btn:     #4cdb87;   /* Fondo botón Agregar */
+    --red-btn:       #f87171;   /* Fondo botón Eliminar */
+
+    /* Textos */
+    --text-dark:     #1a1a2e;   /* Texto principal */
+    --text-muted:    #6b7a90;   /* Texto secundario / labels */
+
+    /* Fondos */
+    --bg:            #f0f4f9;   /* Fondo general de la página */
+    --card-bg:       #ffffff;   /* Fondo de tarjetas */
+
+    /* Dimensiones de layout */
+    --sidebar-w:     220px;     /* Ancho del sidebar */
+    --header-h:      70px;      /* Alto del header */
+}
+
+
+  /* BODY  */
+
+body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text-dark);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
 }
 
-/* TOP BAR */
+
+  /* HEADER — barra superior fija */
 
 header {
     position: static;
-    height: 70px;
-    background: #0078A91A;
+    height: var(--header-h);
+    background: var(--ppg-blue-light);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 28px;
-    z-index: 100;
+    z-index: 100;             /* Por encima del resto del contenido */
     border-bottom: 1px solid #c9ddf5;
     box-shadow: 0 2px 8px rgba(0, 91, 171, 0.08);
 }
@@ -43,17 +85,16 @@ header {
     padding: 10px 20px;
     border: 1.5px solid #b8cfe8;
     border-radius: 50px;
-    font-family: "Aptos", "Segoe UI Variable", "Segoe UI", "SF Pro Text", 
-                -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--font-sans);
     font-size: 15px;
     background: #fff;
-    color: #1a1a2e;
+    color: var(--text-dark);
     outline: none;
     transition: border-color 0.2s;
 }
 
 .search-bar input:focus {
-    border-color: #005bab;
+    border-color: var(--ppg-blue); /* Resalta al enfocar */
 }
 
   /* Ícono / avatar de usuario ─────────────────────────────── */
@@ -95,7 +136,7 @@ header {
     border-radius: 999px;
     border: 1px solid #b8cfe8;
     background: #ffffff;
-    color: #005bab;
+    color: var(--ppg-blue);
     font-size: 14px;
     font-weight: 700;
     text-decoration: none;
@@ -103,51 +144,64 @@ header {
 }
 
 .btn-logout:hover {
-    background: #005bab;
+    background: var(--ppg-blue);
     color: #ffffff;
-    border-color: #005bab;
+    border-color: var(--ppg-blue);
 }
 
-/* SIDEBAR */
 
-.sidebar {
-    width: 220px;
-    height: calc(100vh - 70px);
-    background-color: #252f3d;
+  /* LAYOUT — contenedor sidebar + main */
+
+.layout {
+    position: relative;
+    display: flex;
+    margin-top: 0;
+    min-height: calc(100vh - var(--header-h));
+    flex: 1;
+}
+
+
+/* SIDEBAR — navegación lateral fija*/
+aside {
+    width: var(--sidebar-w);
+    background: var(--navy);
     padding: 36px 0 24px;
-    position: fixed;
-    top: 70px;
+    position: absolute;
+    top: 0;
     left: 0;
-    z-index: 80;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.menu {
-    list-style: none;
-    padding: 0;
-}
-
-.menu li {
-    margin: 0;
-}
-
-.menu a {
-    color: #a8bdd4;
-    text-decoration: none;
+  /* Links de navegación ───────────────────────────────────── */
+aside nav a {
+    display: block;
+    padding: 16px 32px;
+    color: #a8bdd4;                        /* Color texto inactivo */
     font-size: 16px;
     font-weight: 600;
+    text-decoration: none;
     letter-spacing: 0.3px;
-    padding: 16px 32px;
-    display: block;
-    border-left: 3px solid transparent;
+    border-left: 3px solid transparent;   /* Borde indicador activo */
     transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 
-.menu a:hover,
-.menu a.active {
-    background: #263447;
+  /* Estado hover y activo */
+aside nav a:hover,
+aside nav a.active {
+    background: var(--navy-light);
     color: #ffffff;
-    border-left-color: #005bab;
+    border-left-color: var(--ppg-blue);   /* Línea azul al lado izquierdo */
 }
+
+main {
+    margin-left: var(--sidebar-w);         
+    padding: 8px 40px 36px;
+    flex: 1;
+}
+
 
 /* CONTENIDO */
 
