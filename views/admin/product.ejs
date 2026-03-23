@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Detalle de Producto</title>
-    <link rel="stylesheet" href="/style_admin_home.css">
+    <link rel="stylesheet" href="/style_admin_product_detail.css">
 </head>
 
 <body>
@@ -29,23 +29,72 @@
     <div class="layout">
         <aside>
             <nav class="menu">
-                <a href="/admin/home">Inicio</a>
+                <a href="/admin/home" class="active">Inicio</a>
                 <a href="/admin/stats">Estadísticas</a>
-                <a href="/admin/orders">Historial de órdenes</a>
+                <a href="/admin/orders">Historial de<br>órdenes</a>
                 <a href="/admin/clients">Clientes</a>
             </nav>
         </aside>
 
         <main>
-            <div class="bienvenida">
-                <h2>Detalle de Producto</h2>
-            </div>
+            <section class="product-detail-page">
+                <a href="/admin/home" class="product-back-link" aria-label="Volver a inicio">
+                    <span class="product-back-arrow">←</span>
+                    <span>Volver</span>
+                </a>
 
-            <section class="catalog-card">
-                <div class="product-detail">
-                    <p>Producto ID: <%= productoId %></p>
-                    <p>Aquí va la información del producto seleccionado</p>
-                </div>
+                <h1 class="product-detail-title">Detalle del producto</h1>
+
+                <section class="product-detail-top">
+                    <div class="product-detail-content">
+                        <div class="product-detail-image-wrap">
+                            <img src="<%= producto.imagen %>" alt="<%= producto.nombre %>">
+                        </div>
+
+                        <div class="product-detail-main">
+                            <h2><%= producto.nombre %></h2>
+                            <div class="product-rating">★★★★★</div>
+                            <div class="product-detail-separator"></div>
+
+                            <p class="product-price">$ <%= producto.precio %></p>
+
+                            <div class="product-meta">
+                                <p>-Peso: <%= producto.peso %></p>
+                                <p>-Volumen: <%= producto.volumen %></p>
+                                <p>-Unidad de Venta: <%= producto.unidadVenta %></p>
+                                <p>-Unidad de Medida: <%= producto.unidadMedida %></p>
+                            </div>
+
+                            <div class="product-detail-separator product-detail-separator-wide"></div>
+
+                            <div class="product-description">
+                                <h3>Descripcion:</h3>
+                                <ul>
+                                    <% producto.descripcion.forEach((item) => { %>
+                                        <li><%= item %></li>
+                                    <% }); %>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="product-actions-card">
+                        <a href="/admin/home_agregarProducto" class="product-action-btn product-action-link">Editar</a>
+                        <a href="/admin/stats" class="product-action-btn product-action-link">Ver estadísticas del producto</a>
+                        <a href="/admin/home_eliminarProducto" class="product-action-btn product-action-btn-delete product-action-link">Eliminar producto</a>
+                    </aside>
+                </section>
+
+                <section class="similar-products-section">
+                    <h2>Productos similares</h2>
+                    <div class="similar-products-grid">
+                        <% producto.similars.forEach((imagen) => { %>
+                            <div class="similar-product-card">
+                                <img src="<%= imagen %>" alt="Producto similar">
+                            </div>
+                        <% }); %>
+                    </div>
+                </section>
             </section>
         </main>
     </div>
