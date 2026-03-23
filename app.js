@@ -32,7 +32,6 @@ app.get('/', (request, response) => {
     response.redirect('/login');
 });
 
-<<<<<<< HEAD
 //Ruta a panel de estadisticas
 // const estadisticasRoutes = require('./routes/admin_estadisticas.routes');
 // app.use(estadisticasRoutes);
@@ -45,8 +44,6 @@ app.use(adminHistOrdenesRoutes);
 
 
 
-=======
->>>>>>> nico/inicioCatalogo
 //Rutas del Carrito
 const carrito = require('./routes/carrito.routes');
 app.use("/carrito", carrito);
