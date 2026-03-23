@@ -461,6 +461,11 @@ main {
     cursor: pointer;
 }
 
+.product-card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
 .product-card:hover {
     box-shadow: 0 6px 20px rgba(0, 91, 171, 0.1);
     border-color: var(--ppg-blue);
