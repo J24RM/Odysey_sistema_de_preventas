@@ -27,6 +27,9 @@ router.put('/cart/items/:producto_id', carritoController.actualizarItem);
 //Ruta delete para eliminar producto
 router.delete('/cart/items/:producto_id', carritoController.eliminarItem);
 
+//Ruta get para ver mis pedidos
+router.get('/mis-pedidos', clienteController.getMisPedidos);
+
 //Ruta get para ver el perfil
 router.get('/profile', cuentaController.getProfile);
 
