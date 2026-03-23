@@ -1,103 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PPG - Navbar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { font-family: 'Public Sans', sans-serif; margin: 0; }
+    .nav-bg { background-color: rgba(0, 120, 169, 0.1); }
+    .nav-border { border-color: rgba(0, 120, 169, 0.2); }
+  </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen">
 
-<!-- Colores
-Menu vertical: #252f3d
-Menu Horizontal: rgba(0, 120, 169, 0.1)
--->
+  <!-- NAVBAR -->
+  <header class="nav-bg border-b nav-border w-full">
+    <div class="w-full px-8 py-2 flex items-center gap-8">
 
-<nav class="navbar navbar-expand-lg" style="background-color: rgba(0, 120, 169, 0.1);">
-  <div class="container-fluid align-items-center">
-
-    <!-- Logo -->
-    <a class="navbar-brand" href="/cliente_home">
-      <img src="/img/ppg-logo.svg" width="60">
-    </a>
-
-    <!-- Menu izquierdo -->
-    <ul class="navbar-nav me-">
-      <li class="nav-item">
-        <a class="btn btn-light me-5" id="btnSucursal" data-bs-toggle="modal" data-bs-target="#modalSelector">
-          Sucursal
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a class="btn btn-light" id="btnCuenta" data-bs-toggle="modal" data-bs-target="#modalSelector">
-          Cambiar Cuenta
-        </a>
-      </li>
-    </ul>
-
-    <!-- Buscador centrado -->
-    <form class="mx-auto search-bar" style="width: 55%;">
-        <div class="input-group">
-    
-        <input 
-        type="search"
-        class="form-control text-center"
-        placeholder="Buscar Producto"
-        aria-label="Buscar Producto"
-        >
-
-        <button class="btn btn-light" type="submit">
-            🔍
+      <!-- Logo PPG -->
+      <div class="flex-shrink-0">
+        <button class="relative flex items-center justify-center w-16 h-16 hover:border-[#0078A9] transition-all duration-200">
+          <img src="../../public/img/ppg-logo.svg" alt="" class="w-full h-full object-contain">
         </button>
+      </div>  
 
-    </div>
-</form>
-    <!-- Menu derecho -->
-    <ul class="navbar-nav ms-auto align-items-center">
-
-      <li class="nav-item me-5">
-        <a class="btn btn-light" href="/mis_pedidos">Mis Pedidos</a>
-      </li>
-
-      <li class="nav-item me-5">
-        <a href="/mi_carrito">
-            <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" width="40">
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a href="/mi_perfil">
-            <img src="https://cdn-icons-png.flaticon.com/512/6326/6326055.png" width="50">
-        </a>
-      </li>
-
-    </ul>
-
-  </div>
-</nav>
-
-<!-- Card de informacion -->
-<div class="modal fade" id="modalSelector" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalTitle"></h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
+      <!-- Sucursal -->
+      <div class="flex-shrink-0">
+        <button class="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-[#0078A9] transition-all duration-200 shadow-sm whitespace-nowrap">
+          Sucursal: Jurica
+          <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
       </div>
 
-      <div class="modal-body" id="modalBody">
+      <!-- Buscador -->
+      <div class="flex-1">
+        <input
+          type="text"
+          placeholder="Buscar Producto"
+          class="w-full bg-white border border-gray-300 rounded-lg px-4 py-1.5 text-sm text-gray-600 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0078A9] focus:border-transparent shadow-sm transition-all duration-200"
+        />
+      </div>
+
+      <!-- Mis Pedidos -->
+      <div class="flex-shrink-0">
+        <button class="flex items-center justify-center bg-white border-2 border-gray-300 rounded-lg w-16 h-10 text-xs font-semibold text-gray-700 hover:border-[#0078A9] hover:text-[#0078A9] transition-all duration-200 leading-tight text-center whitespace-nowrap">
+          Mis<br/>Pedidos
+        </button>
+      </div>
+
+      <!-- Carrito  -->
+      <div class="flex-shrink-0 relative">
+        <button class="relative flex items-center justify-center w-10 h-10 hover:border-[#0078A9] transition-all duration-200">
+          <img src="../../public/img/carrito.png" alt="">
+          <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">3</span>
+        </button>
+      </div>
+
+      <!-- Usuario  -->
+      <div class="flex-shrink-0">
+        <button class="flex items-center justify-center w-10 h-10 rounded-full border-2 border-gray-300 bg-white hover:border-[#0078A9] transition-all duration-200">
+          <img src="../../public/img/iconoPerfil.png" alt="">
+        </button>
       </div>
 
     </div>
+  </header>
 
-  </div>
-</div>
-
-
-<script src="/nav_bar.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

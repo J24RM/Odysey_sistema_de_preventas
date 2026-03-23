@@ -19,7 +19,7 @@ router.get('/product/:id', productoController.getProductoCliente);
 router.get('/cart', carritoController.getCarrito);
 
 //Ruta post para gregar producto al carrito
-router.post('/cart/items', carritoController.agregarItem);
+router.post('/carrito/items', carritoController.agregarItem);
 
 //Ruta put para modificar cantidad
 router.put('/cart/items/:producto_id', carritoController.actualizarItem);
