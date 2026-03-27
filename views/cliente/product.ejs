@@ -1,66 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Cliente Product</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detalle de Producto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { font-family: 'Public Sans', sans-serif; }
+    .nav-bg { background-color: rgba(0, 120, 169, 0.1); }
+    .nav-border { border-color: rgba(0, 120, 169, 0.2); }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'ppg-dark': '#002736',
+            'ppg-blue': '#0078A9',
+            'ppg-light-blue': '#8FBADE',
+          },
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-100 min-h-screen">
 
-<nav class="w-full flex items-center justify-between px-6 py-3 border-b border-gray-200" style="background-color: rgba(0, 120, 169, 0.1);">
-    <!-- Logo -->
-    <a href="/home" class="flex-shrink-0">
-        <img src="/img/ppg-logo.svg" class="w-[60px]" alt="PPG">
-    </a>
+  <%- include('../includes/_navbar') %>
 
-    <!-- Sucursal -->
-    <div class="ml-6 flex-shrink-0">
-        <button id="btnSucursal" data-bs-toggle="modal" data-bs-target="#modalSelector" class="bg-white border border-gray-300 text-gray-800 rounded-md px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm">
-            Sucursal: Jurica
+
+  <!-- SECCIÓN PRINCIPAL DEL PRODUCTO -->
+  <section class="max-w-6xl mx-auto px-6 py-10">
+    <div class="flex flex-col lg:flex-row gap-10 items-start">
+
+      <!-- Columna izquierda: imágenes -->
+      <div class="flex flex-col gap-4 items-center lg:w-[340px] shrink-0">
+        <!-- Imagen principal -->
+        <div class="w-full flex justify-center">
+          <img src="/img/botePintura.png" alt="Sellador Comex 5x1 Clásico" class="w-64 h-64 object-contain" />
+        </div>
+        <!-- Miniaturas -->
+        <div class="flex gap-3 justify-center">
+          <div class="w-16 h-16 border-2 border-yellow-400 rounded overflow-hidden flex items-center justify-center bg-yellow-50 cursor-pointer">
+            <img src="/img/botePintura.png" alt="thumb1" class="w-full h-full object-contain p-1"/>
+          </div>
+          <div class="w-16 h-16 border border-gray-200 rounded overflow-hidden flex items-center justify-center bg-gray-50 cursor-pointer hover:border-yellow-400 transition">
+            <img src="/img/botePintura.png" alt="thumb2" class="w-full h-full object-contain p-1"/>
+          </div>
+          <div class="w-16 h-16 border-2 border-yellow-400 rounded overflow-hidden flex items-center justify-center bg-yellow-50 cursor-pointer">
+            <img src="/img/botePintura.png" alt="thumb3" class="w-full h-full object-contain p-1"/>
+          </div>
+          <div class="w-16 h-16 border border-gray-200 rounded overflow-hidden flex items-center justify-center bg-gray-50 cursor-pointer hover:border-yellow-400 transition">
+            <img src="/img/botePintura.png" alt="thumb4" class="w-full h-full object-contain p-1"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna central: información del producto -->
+      <div class="flex-1 min-w-0">
+        <!-- Título -->
+        <h1 class="text-2xl font-bold text-gray-900 leading-snug mb-3">
+          Sellador Comex 5×1 Clásico Preparación de Superficies PPG Silicona o Poliuretano 4000 ml Sellador
+        </h1>
+
+        <!-- Estrellas -->
+        <div class="flex items-center gap-1 mb-4">
+          <img src="/img/estrellita.png" alt="estrella" class="w-6 h-6"/>
+          <img src="/img/estrellita.png" alt="estrella" class="w-6 h-6"/>
+          <img src="/img/estrellita.png" alt="estrella" class="w-6 h-6"/>
+          <img src="/img/estrellita.png" alt="estrella" class="w-6 h-6"/>
+          <img src="/img/estrellita.png" alt="estrella" class="w-6 h-6"/>
+        </div>
+
+        <hr class="border-gray-200 mb-4"/>
+
+        <!-- Precio -->
+        <p class="text-3xl font-bold text-gray-900 mb-4">$ 800</p>
+
+        <!-- Especificaciones -->
+        <div class="text-sm text-gray-700 space-y-1 mb-4">
+          <p>-Peso: 2Kg</p>
+          <p>-Volumen: 0.3 m3</p>
+          <p>-Unidad de Venta:</p>
+          <p>-Unidad de Medida:</p>
+        </div>
+
+        <hr class="border-gray-200 mb-4"/>
+
+        <!-- Descripción -->
+        <div class="text-sm text-gray-800">
+          <p class="font-semibold mb-2">Descripcion:</p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li>Alta calidad y rendimiento profesional: Fórmula acrílica premium para superficies interiores y exteriores, con gran durabilidad</li>
+            <li>Excelente cobertura: Cubre fácilmente imperfecciones con una sola mano en la mayoría de las superficies</li>
+          </ul>
+        </div>
+      </div>
+
+      <div
+        class="lg:w-56 shrink-0 rounded-xl p-5 flex flex-col gap-4 bg-white"
+        style="box-shadow: 0 4px 24px rgba(0,0,0,0.12);"
+      >
+        <!-- Precio -->
+        <p class="text-4xl font-extrabold text-gray-900">$ 800</p>
+
+        <!-- Sucursal -->
+        <p class="text-sm font-semibold" style="color: #0078A9;">Sucursal: Galerias</p>
+
+        <!-- Cantidad -->
+        <div class="border border-gray-400 rounded-md px-4 py-2 text-sm font-semibold text-gray-800 bg-white">
+          Cantidad: 5
+        </div>
+          <!-- Botón agregar al carrito -->
+          <form action="/cart/items" method="POST">
+            <input type="hidden" name="cantidad_ingresada" value="5"/>
+            <input type="hidden" name="id_producto" value="17"/>
+            <input type="hidden" name="id_usuario" value="35"/>
+            <button type="submit" style="background-color: #002736;" 
+            class="w-full text-white text-sm font-semibold rounded-md py-3">
+              Agregar al carrito
+            </button>
+          </form>
+        
+        
+        <!-- Botón calificar producto -->
+        <button
+          class="w-full text-white text-sm font-semibold rounded-md py-3 hover:opacity-90 transition"
+          style="background-color: #8FBADE;"
+          
+        >
+          Calificar producto
         </button>
+      </div>
+
     </div>
+  </section>
 
-    <!-- Buscador centrado -->
-    <form class="mx-auto w-[45%]">
-        <div class="relative">
-            <input type="search" class="w-full text-center border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#0078A9] text-gray-800" placeholder="Buscar Producto" aria-label="Buscar Producto">
-        </div>
-    </form>
+  <!-- SECCIÓN PRODUCTOS SIMILARES -->
+  <section class="max-w-6xl mx-auto px-6 pb-10">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">Productos similares</h2>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <% for (let i = 0; i < 4; i++) { %>
+      <div class="border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 hover:shadow-md transition cursor-pointer">
+        <img src="/img/botePintura.png" alt="Producto similar" class="w-24 h-24 object-contain"/>
+      </div>
+      <% } %>
 
-    <!-- Menu derecho -->
-    <div class="flex items-center space-x-6 shrink-0">
-        <a href="/mis-pedidos" class="bg-white border text-gray-800 border-gray-300 rounded-md px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm">Mis Pedidos</a>
-        <a href="/cart" class="hover:opacity-80 transition-opacity">
-            <img src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png" class="w-[35px]" alt="Carrito">
-        </a>
-        <button id="btnPerfil" data-bs-toggle="modal" data-bs-target="#modalSelector" class="block hover:opacity-80 transition-opacity">
-            <img src="/img/iconoPerfil.png" class="w-[40px] h-[40px] rounded-full object-cover shadow-sm border" alt="Perfil">
-        </button>
+
     </div>
-</nav>
+  </section>
 
-<!-- Card de informacion -->
-<div id="modalSelector" class="tw-modal hidden fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <h5 class="text-lg font-semibold text-gray-800" id="modalTitle"></h5>
-            <button class="btn-close-modal text-gray-500 hover:text-gray-700 text-3xl leading-none">&times;</button>
-        </div>
-        <div class="p-4 overflow-y-auto text-gray-800" id="modalBody">
-        </div>
-    </div>
-</div>
-
-<!-- Contenido principal -->
-<div class="max-w-7xl mx-auto px-4 mt-12 mb-12">
-    <div class="bg-white p-6 rounded shadow-sm border border-gray-200">
-        <h1 class="text-2xl font-bold mb-4 text-gray-800">Detalle de Producto</h1>
-        <p class="text-gray-600 mb-2 font-medium">Producto ID: <%= productoId %></p>
-        <p class="text-gray-600">Aquí va la información del producto seleccionado</p>
-    </div>
-</div>
-
-<script src="/nav_bar.js"></script>
 </body>
 </html>
