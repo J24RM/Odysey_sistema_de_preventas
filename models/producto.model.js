@@ -1,7 +1,6 @@
 const supabase = require('../utils/supabase');
 
 module.exports = class Producto {
-    
     static async fetchAll() {
         const { data: productos, error } = await supabase
             .from('producto')
@@ -24,6 +23,11 @@ module.exports = class Producto {
         return producto;
     }
 
+    // Alias for compatibility with other controllers
+    static async encontrarProductoPorId(id_producto) {
+        return this.findById(id_producto);
+    }
+
     static async search(query) {
         const { data: productos, error } = await supabase
             .from('producto')
@@ -34,5 +38,26 @@ module.exports = class Producto {
         
         if (error) throw error;
         return productos;
+    }
+
+    static async crearProducto({ nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave }) {
+        const { data, error } = await supabase
+            .from('producto')
+            .insert({
+                nombre,
+                descripcion,
+                url_imagen,
+                unidad_venta,
+                unidad_medida,
+                peso,
+                precio_unitario,
+                activo,
+                clave
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 }

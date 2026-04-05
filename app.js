@@ -5,6 +5,7 @@ const PORT = 3000;
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require("path");
+const multer = require('multer');
 
 // Archivos de rutas
 const authRoutes = require('./routes/auth.routes');
@@ -28,6 +29,33 @@ app.use(session({
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+// Configuración de multer para subida de imágenes
+const fileStorage = multer.diskStorage({
+    destination: (request, file, callback) => {
+        callback(null, path.join(__dirname, 'uploads'));
+    },
+    filename: (request, file, callback) => {
+        // Generar nombre único sin caracteres problemáticos
+        const timestamp = Date.now();
+        const ext = path.extname(file.originalname);
+        const name = path.basename(file.originalname, ext).replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        callback(null, `${timestamp}_${name}${ext}`);
+    },
+});
+
+const fileFilter = (request, file, callback) => {
+    if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+        callback(null, true);
+    } else {
+        callback(null, false);
+    }
+};
+
+app.use(multer({ storage: fileStorage, fileFilter }).single('imagen'));
+
+// Servir archivos estáticos de la carpeta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 //Rutas publicas (sin autenticacion)
 app.use(authRoutes);
 
@@ -40,11 +68,6 @@ app.get('/', (request, response) => {
 // const estadisticasRoutes = require('./routes/admin_estadisticas.routes');
 // app.use(estadisticasRoutes);
 // ESAS LINEAS DAN FALLO
-
-//Rutas del Carrito
-const carrito = require('./routes/cliente/carrito.routes');
-app.use("/cart", carrito);
-
 
 //Middleware global de autenticacion
 app.use((request, response, next) => {
@@ -79,11 +102,15 @@ app.use('/admin', requireAdmin, adminEstadisticasRoutes);
 
 
 // Rutas del Cliente
-app.use('/cliente', clienteRoutes);
+app.use('/cliente', requireCliente, clienteRoutes);
 
 // Rutas del producto
 const producto = require('./routes/producto.routes');
-app.use('/product', producto);
+app.use('/product', requireCliente, producto);
+
+//Rutas del Carrito
+const carrito = require('./routes/cliente/carrito.routes');
+app.use("/cart",requireCliente,carrito);
 
 app.use((request, response, next) => {
     response.status(404).send("La ruta no existe");
