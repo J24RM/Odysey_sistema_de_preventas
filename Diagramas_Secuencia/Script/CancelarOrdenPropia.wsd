@@ -50,7 +50,7 @@ ctrl -->> ruta :response.redirect('/orden')
 deactivate ctrl
 activate ruta
 
-ruta -> ctrl: GET /orden/
+ruta -> ctrl: getMisOrdenes()
 deactivate ruta
 activate ctrl
 ctrl ->> model: ObtenerOrdenesPorUsuario(id_usuario)
