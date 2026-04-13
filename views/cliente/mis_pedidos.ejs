@@ -142,6 +142,9 @@
 
 <%- include('../includes/_footer') %>
 
+
+<meta name="csrf-token" content="<%= csrfToken %>">
+
 <script>
 document.querySelector('.btn-exportar').addEventListener('click', async function() {
     const btn = this;
@@ -243,12 +246,19 @@ document.querySelectorAll('.pedidos-row').forEach(row => {
             const btnContainer = document.getElementById('btn-cancelar');
             btnContainer.innerHTML = '';
 
+            // Boton de Cancelar
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            console.log("csrf:", csrfToken); // Agrégalo temporalmente para verificar
+
             if(orden.cancelar == true){
                 btnContainer.innerHTML = `
-                    <a href="/orden/cancelar/${orden.id_orden}" 
-                        class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition-colors duration-200">
-                        Cancelar Orden
-                    </a>
+                    <form action="/orden/cancelar/${orden.id_orden}" method="POST">
+                        <input type="hidden" name="_csrf" value="${csrfToken}">
+                        <button type="submit"
+                            class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow transition-colors duration-200">
+                            Cancelar Orden
+                        </button>
+                    </form>
                 `;
             }
 
@@ -290,6 +300,7 @@ document.querySelectorAll('.pedidos-row').forEach(row => {
     });
 });
 </script>
+
 
 </body>
 </html>

@@ -8,12 +8,14 @@ exports.getMisPedidos = async (request, response) => {
         response.render('cliente/mis_pedidos', { 
             usuario: request.session.usuario,
             pedidos: pedidos,
+            error: request.session.error,
         });
     } catch (error) {
         console.error('Error fetching orders:', error);
         response.render('cliente/mis_pedidos', { 
             usuario: request.session.usuario,
-            pedidos: []
+            pedidos: [],
+            error: request.session.error,
         });
     }
 };
