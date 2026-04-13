@@ -315,6 +315,12 @@ exports.postCargarBulk = async (request, response) => {
                     const insertados = [];
                     const errores = [];
 
+                    // Mapa de nombre original → nombre real guardado por multer
+                    const imageMapByOriginalName = {};
+                    for (const f of archivos) {
+                        imageMapByOriginalName[f.originalname] = f.filename;
+                    }
+
                     for (let i = 0; i < rows.length; i++) {
                         const row = rows[i];
                         const numFila = i + 2;
@@ -336,10 +342,19 @@ exports.postCargarBulk = async (request, response) => {
                             continue;
                         }
 
-                        const rutaImagen = path.join(uploadsDir, url_imagen);
-                        if (!fs.existsSync(rutaImagen)) {
-                            errores.push(`Fila ${numFila}: La imagen "${url_imagen}" no existe en uploads. Sube las imágenes primero.`);
-                            continue;
+                        // Resolver el nombre real del archivo: primero buscar en las imágenes
+                        // subidas en esta misma solicitud (multer les cambia el nombre),
+                        // luego verificar si ya existe en disco con ese nombre exacto.
+                        let storedImageFilename;
+                        if (imageMapByOriginalName[url_imagen]) {
+                            storedImageFilename = imageMapByOriginalName[url_imagen];
+                        } else {
+                            const rutaImagen = path.join(uploadsDir, url_imagen);
+                            if (!fs.existsSync(rutaImagen)) {
+                                errores.push(`Fila ${numFila}: La imagen "${url_imagen}" no existe en uploads. Sube las imágenes primero.`);
+                                continue;
+                            }
+                            storedImageFilename = url_imagen;
                         }
 
                         const precioNum = parseFloat(precio_unitario);
@@ -350,7 +365,7 @@ exports.postCargarBulk = async (request, response) => {
                         const esActivo = ['true', '1', 'si', 'sí', 'yes'].includes(activo.toLowerCase());
 
                         try {
-                            await Producto.crearProducto({ nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso: pesoNum, precio_unitario: precioNum, activo: esActivo, clave });
+                            await Producto.crearProducto({ nombre, descripcion, url_imagen: storedImageFilename, unidad_venta, unidad_medida, peso: pesoNum, precio_unitario: precioNum, activo: esActivo, clave });
                             insertados.push(`${nombre} (clave: ${clave})`);
                         } catch (dbError) {
                             if (dbError.code === '23505' || dbError.message?.includes('duplicate key')) {
@@ -487,11 +502,21 @@ exports.postCargarCSV = async (request, response) => {
                 continue;
             }
 
-            // Validar que la imagen exista en la carpeta uploads
-            const rutaImagen = path.join(uploadsDir, url_imagen);
-            if (!fs.existsSync(rutaImagen)) {
-                errores.push(`Fila ${numFila}: La imagen "${url_imagen}" no existe en la carpeta de uploads. Sube las imágenes primero.`);
-                continue;
+            // Validar que la imagen exista en la carpeta uploads.
+            // Multer renombra los archivos con timestamp, así que si no coincide
+            // exacto buscamos un archivo que termine con el nombre indicado.
+            let storedImageFilename;
+            const rutaExacta = path.join(uploadsDir, url_imagen);
+            if (fs.existsSync(rutaExacta)) {
+                storedImageFilename = url_imagen;
+            } else {
+                const archivosEnDisco = fs.readdirSync(uploadsDir);
+                const encontrado = archivosEnDisco.find(f => f === url_imagen || f.endsWith('_' + url_imagen));
+                if (!encontrado) {
+                    errores.push(`Fila ${numFila}: La imagen "${url_imagen}" no existe en la carpeta de uploads. Sube las imágenes primero.`);
+                    continue;
+                }
+                storedImageFilename = encontrado;
             }
 
             // Validar precio y peso sean números válidos
@@ -514,7 +539,7 @@ exports.postCargarCSV = async (request, response) => {
                 await Producto.crearProducto({
                     nombre,
                     descripcion,
-                    url_imagen,
+                    url_imagen: storedImageFilename,
                     unidad_venta,
                     unidad_medida,
                     peso: pesoNum,
