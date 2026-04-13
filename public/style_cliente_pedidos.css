@@ -166,10 +166,17 @@ body {
 .pedidos-table-head,
 .pedidos-row {
     display: grid;
-    grid-template-columns: 100px 1.2fr 1.2fr 100px 160px;
+    grid-template-columns: 1.6fr 1fr 1.2fr 100px 160px;
     gap: 16px;
     align-items: center;
     padding: 14px 24px;
+}
+
+.pedidos-table-head span,
+.pedidos-row span:not(.status-pill) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .pedidos-table-head {
