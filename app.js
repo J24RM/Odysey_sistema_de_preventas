@@ -72,8 +72,9 @@ app.use(multer({ storage: fileStorage, fileFilter }).fields([
 
 app.use(csrfProtection);
 
-app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
+app.use((request, response, next) => {
+    response.locals.csrfToken = request.csrfToken();
+    response.locals.sucursal_activa = request.session.sucursal_activa || null;
     next();
 });
 
