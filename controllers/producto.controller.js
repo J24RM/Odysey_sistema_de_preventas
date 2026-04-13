@@ -1,4 +1,7 @@
 const Producto = require('../models/producto.model');
+const xlsx = require('xlsx');
+const path = require('path');
+const fs = require('fs');
 
 //Obtener todos los productos (admin)
 exports.getProductos = async (request, response) => {
@@ -19,6 +22,7 @@ exports.getAgregarProducto = (request, response) => {
         mensaje: null,
         mensajeBulk: null,
         errorBulk: null,
+        resultadoCSV: null,
         error: null
     });
 };
@@ -37,6 +41,7 @@ exports.postAgregarProducto = async (request, response) => {
                 mensaje: null,
                 mensajeBulk: null,
                 errorBulk: null,
+                resultadoCSV: null,
                 error: 'Todos los campos son obligatorios. Por favor, llena todos los campos.'
             });
         }
@@ -83,6 +88,7 @@ exports.postAgregarProducto = async (request, response) => {
                 },
                 mensajeBulk: null,
                 errorBulk: null,
+                resultadoCSV: null,
                 error: null
             });
         } catch (dbError) {
@@ -105,6 +111,7 @@ exports.postAgregarProducto = async (request, response) => {
                     mensaje: null,
                     mensajeBulk: null,
                     errorBulk: null,
+                    resultadoCSV: null,
                     error: 'La clave del producto ya existe. Por favor, usa una clave diferente.'
                 });
             }
@@ -119,6 +126,7 @@ exports.postAgregarProducto = async (request, response) => {
             mensaje: null,
             mensajeBulk: null,
             errorBulk: null,
+            resultadoCSV: null,
             error: 'Error al agregar el producto. Intenta de nuevo.'
         });
     }
@@ -264,6 +272,120 @@ exports.getFormEditarProducto = async (request, response) => {
     }
 };
 
+//Procesar carga masiva combinada (imágenes + CSV en un solo submit)
+exports.postCargarBulk = async (request, response) => {
+    const archivos = request.files?.['imagenes'] || [];
+    const archivoCSV = request.files?.['archivoCSV']?.[0];
+
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+
+    // Procesar imágenes
+    let mensajeBulk = null;
+    let errorBulk = null;
+
+    if (archivos.length > 0) {
+        mensajeBulk = {
+            cantidad: archivos.length,
+            nombres: archivos.map(f => f.filename)
+        };
+    }
+
+    // Procesar CSV/Excel
+    let resultadoCSV = null;
+
+    if (archivoCSV) {
+        try {
+            const workbook = xlsx.readFile(archivoCSV.path);
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+
+            try { fs.unlinkSync(archivoCSV.path); } catch (_) {}
+
+            if (rows.length === 0) {
+                resultadoCSV = { insertados: [], errores: ['El archivo está vacío. Asegúrate de que tenga al menos una fila de datos.'] };
+            } else {
+                const columnasRequeridas = ['nombre', 'descripcion', 'url_imagen', 'unidad_venta', 'unidad_medida', 'peso', 'precio_unitario', 'activo', 'clave'];
+                const columnasArchivo = Object.keys(rows[0]).map(k => k.trim().toLowerCase());
+                const faltantes = columnasRequeridas.filter(c => !columnasArchivo.includes(c));
+
+                if (faltantes.length > 0) {
+                    resultadoCSV = { insertados: [], errores: [`El archivo no tiene el formato correcto. Columnas faltantes: ${faltantes.join(', ')}.`] };
+                } else {
+                    const insertados = [];
+                    const errores = [];
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const numFila = i + 2;
+
+                        const datos = {};
+                        for (const [k, v] of Object.entries(row)) {
+                            datos[k.trim().toLowerCase()] = String(v).trim();
+                        }
+
+                        const { nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave } = datos;
+
+                        if (!nombre || !descripcion || !url_imagen || !unidad_venta || !unidad_medida || !peso || !precio_unitario || !clave) {
+                            errores.push(`Fila ${numFila}: Hay campos vacíos obligatorios.`);
+                            continue;
+                        }
+
+                        if (clave.length > 7) {
+                            errores.push(`Fila ${numFila}: La clave "${clave}" excede 7 caracteres (tiene ${clave.length}).`);
+                            continue;
+                        }
+
+                        const rutaImagen = path.join(uploadsDir, url_imagen);
+                        if (!fs.existsSync(rutaImagen)) {
+                            errores.push(`Fila ${numFila}: La imagen "${url_imagen}" no existe en uploads. Sube las imágenes primero.`);
+                            continue;
+                        }
+
+                        const precioNum = parseFloat(precio_unitario);
+                        const pesoNum = parseFloat(peso);
+                        if (isNaN(precioNum) || precioNum < 0) { errores.push(`Fila ${numFila}: El precio "${precio_unitario}" no es válido.`); continue; }
+                        if (isNaN(pesoNum) || pesoNum < 0) { errores.push(`Fila ${numFila}: El peso "${peso}" no es válido.`); continue; }
+
+                        const esActivo = ['true', '1', 'si', 'sí', 'yes'].includes(activo.toLowerCase());
+
+                        try {
+                            await Producto.crearProducto({ nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso: pesoNum, precio_unitario: precioNum, activo: esActivo, clave });
+                            insertados.push(`${nombre} (clave: ${clave})`);
+                        } catch (dbError) {
+                            if (dbError.code === '23505' || dbError.message?.includes('duplicate key')) {
+                                errores.push(`Fila ${numFila}: La clave "${clave}" ya existe en la base de datos.`);
+                            } else {
+                                errores.push(`Fila ${numFila}: Error al insertar "${nombre}" — ${dbError.message || 'error desconocido'}.`);
+                            }
+                        }
+                    }
+
+                    resultadoCSV = { insertados, errores };
+                }
+            }
+        } catch (parseError) {
+            console.error('Error al parsear el archivo:', parseError);
+            try { fs.unlinkSync(archivoCSV.path); } catch (_) {}
+            resultadoCSV = { insertados: [], errores: ['No se pudo leer el archivo. Verifica que sea un CSV o Excel válido.'] };
+        }
+    }
+
+    if (!mensajeBulk && !resultadoCSV) {
+        errorBulk = 'No se recibió ningún archivo. Selecciona al menos un CSV o imágenes.';
+    }
+
+    return response.render('admin/home_agregarProducto', {
+        usuario: request.session.usuario,
+        formulario: null,
+        mensaje: null,
+        mensajeBulk,
+        errorBulk,
+        resultadoCSV,
+        error: null
+    });
+};
+
 //Procesar carga masiva de imágenes
 exports.postCargarImagenes = (request, response) => {
     const archivos = request.files?.['imagenes'] || [];
@@ -275,6 +397,7 @@ exports.postCargarImagenes = (request, response) => {
             mensaje: null,
             mensajeBulk: null,
             errorBulk: 'No se recibió ninguna imagen. Asegúrate de seleccionar archivos PNG, JPG o JPEG.',
+            resultadoCSV: null,
             error: null
         });
     }
@@ -290,8 +413,143 @@ exports.postCargarImagenes = (request, response) => {
             nombres: nombresGuardados
         },
         errorBulk: null,
+        resultadoCSV: null,
         error: null
     });
+};
+
+//Procesar carga masiva de productos desde CSV o Excel
+exports.postCargarCSV = async (request, response) => {
+    const archivo = request.files?.['archivoCSV']?.[0];
+
+    const renderError = (msg) => response.render('admin/home_agregarProducto', {
+        usuario: request.session.usuario,
+        formulario: null,
+        mensaje: null,
+        mensajeBulk: null,
+        errorBulk: null,
+        resultadoCSV: { insertados: [], errores: [msg] },
+        error: null
+    });
+
+    if (!archivo) {
+        return renderError('No se recibió ningún archivo. Asegúrate de seleccionar un CSV o Excel.');
+    }
+
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+
+    try {
+        const workbook = xlsx.readFile(archivo.path);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+
+        // Eliminar el archivo temporal del CSV de la carpeta uploads
+        try { fs.unlinkSync(archivo.path); } catch (_) {}
+
+        if (rows.length === 0) {
+            return renderError('El archivo está vacío. Asegúrate de que tenga al menos una fila de datos.');
+        }
+
+        // Validar que existan todas las columnas requeridas
+        const columnasRequeridas = ['nombre', 'descripcion', 'url_imagen', 'unidad_venta', 'unidad_medida', 'peso', 'precio_unitario', 'activo', 'clave'];
+        const columnasArchivo = Object.keys(rows[0]).map(k => k.trim().toLowerCase());
+        const faltantes = columnasRequeridas.filter(c => !columnasArchivo.includes(c));
+
+        if (faltantes.length > 0) {
+            return renderError(`El archivo no tiene el formato correcto. Columnas faltantes: ${faltantes.join(', ')}. El orden debe ser: nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave.`);
+        }
+
+        const insertados = [];
+        const errores = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const numFila = i + 2; // +1 por header, +1 base 1
+
+            // Normalizar claves del objeto
+            const datos = {};
+            for (const [k, v] of Object.entries(row)) {
+                datos[k.trim().toLowerCase()] = String(v).trim();
+            }
+
+            const { nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave } = datos;
+
+            // Validar que los campos no estén vacíos
+            if (!nombre || !descripcion || !url_imagen || !unidad_venta || !unidad_medida || !peso || !precio_unitario || !clave) {
+                errores.push(`Fila ${numFila}: Hay campos vacíos obligatorios.`);
+                continue;
+            }
+
+            // Validar longitud de clave (máximo 7 caracteres)
+            if (clave.length > 7) {
+                errores.push(`Fila ${numFila}: La clave "${clave}" excede 7 caracteres (tiene ${clave.length}).`);
+                continue;
+            }
+
+            // Validar que la imagen exista en la carpeta uploads
+            const rutaImagen = path.join(uploadsDir, url_imagen);
+            if (!fs.existsSync(rutaImagen)) {
+                errores.push(`Fila ${numFila}: La imagen "${url_imagen}" no existe en la carpeta de uploads. Sube las imágenes primero.`);
+                continue;
+            }
+
+            // Validar precio y peso sean números válidos
+            const precioNum = parseFloat(precio_unitario);
+            const pesoNum = parseFloat(peso);
+            if (isNaN(precioNum) || precioNum < 0) {
+                errores.push(`Fila ${numFila}: El precio "${precio_unitario}" no es un número válido.`);
+                continue;
+            }
+            if (isNaN(pesoNum) || pesoNum < 0) {
+                errores.push(`Fila ${numFila}: El peso "${peso}" no es un número válido.`);
+                continue;
+            }
+
+            // Interpretar campo activo
+            const activoStr = activo.toLowerCase();
+            const esActivo = ['true', '1', 'si', 'sí', 'yes'].includes(activoStr);
+
+            try {
+                await Producto.crearProducto({
+                    nombre,
+                    descripcion,
+                    url_imagen,
+                    unidad_venta,
+                    unidad_medida,
+                    peso: pesoNum,
+                    precio_unitario: precioNum,
+                    activo: esActivo,
+                    clave
+                });
+                insertados.push(`${nombre} (clave: ${clave})`);
+            } catch (dbError) {
+                if (dbError.code === '23505' ||
+                    dbError.message?.includes('duplicate key') ||
+                    dbError.message?.includes('unique constraint')) {
+                    errores.push(`Fila ${numFila}: La clave "${clave}" ya existe en la base de datos.`);
+                } else {
+                    errores.push(`Fila ${numFila}: Error al insertar "${nombre}" — ${dbError.message || 'error desconocido'}.`);
+                }
+            }
+        }
+
+        return response.render('admin/home_agregarProducto', {
+            usuario: request.session.usuario,
+            formulario: null,
+            mensaje: null,
+            mensajeBulk: null,
+            errorBulk: null,
+            resultadoCSV: { insertados, errores },
+            error: null
+        });
+
+    } catch (parseError) {
+        console.error('Error al parsear el archivo:', parseError);
+        // Limpiar archivo si existe
+        try { fs.unlinkSync(archivo.path); } catch (_) {}
+        return renderError('No se pudo leer el archivo. Verifica que sea un CSV o Excel válido.');
+    }
 };
 
 //Procesar formulario de editar producto

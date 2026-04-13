@@ -46,12 +46,26 @@ const fileStorage = multer.diskStorage({
 });
 
 const fileFilter = (request, file, callback) => {
-    if (file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg') {
+    const imageTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+    const csvTypes = [
+        'text/csv',
+        'application/csv',
+        'text/plain',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    if (imageTypes.includes(file.mimetype) || csvTypes.includes(file.mimetype)) {
         callback(null, true);
     } else {
         callback(null, false);
     }
 };
+
+app.use(multer({ storage: fileStorage, fileFilter }).fields([
+    { name: 'imagen', maxCount: 1 },
+    { name: 'imagenes', maxCount: 50 },
+    { name: 'archivoCSV', maxCount: 1 }
+]));
 
 app.use(csrfProtection);
 
@@ -59,11 +73,6 @@ app.use((req, res, next) => {
     res.locals.csrfToken = req.csrfToken();
     next();
 });
-
-app.use(multer({ storage: fileStorage, fileFilter }).fields([
-    { name: 'imagen', maxCount: 1 },
-    { name: 'imagenes', maxCount: 50 }
-]));
 
 // Servir archivos estáticos de la carpeta uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -163,34 +163,56 @@
                     </div>
                     <% } %>
 
-                    <div class="grid grid-cols-2 gap-6">
-
-                        <!-- Sección 1: Cargar archivo -->
-                        <div class="border-2 border-gray-200 rounded-xl p-6 space-y-4">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900">Cargar archivo</h3>
-                                <p class="text-sm text-gray-500 mt-1">Sube un CSV o Excel con el listado de productos.</p>
-                            </div>
-                            <label id="csvDropZone" class="flex flex-col items-center justify-center gap-2 p-10 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all">
-                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                </svg>
-                                <span id="csvLabel" class="text-sm text-gray-600 font-medium text-center">Haz clic o arrastra tu archivo CSV o Excel</span>
-                                <input id="bulkFile" type="file" accept=".csv,.xlsx,.xls" hidden />
-                            </label>
-                            <button id="uploadCsvBtn" class="w-full py-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all" type="button">
-                                Subir archivo
-                            </button>
+                    <% if (resultadoCSV) { %>
+                        <% if (resultadoCSV.insertados.length > 0) { %>
+                        <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                            <p class="text-green-700 font-semibold">Se insertaron <%= resultadoCSV.insertados.length %> producto(s) correctamente.</p>
+                            <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
+                                <% resultadoCSV.insertados.forEach(n => { %>
+                                    <li><%= n %></li>
+                                <% }) %>
+                            </ul>
                         </div>
+                        <% } %>
+                        <% if (resultadoCSV.errores.length > 0) { %>
+                        <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                            <p class="text-red-700 font-semibold">Se encontraron <%= resultadoCSV.errores.length %> error(es) en el archivo:</p>
+                            <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
+                                <% resultadoCSV.errores.forEach(e => { %>
+                                    <li><%= e %></li>
+                                <% }) %>
+                            </ul>
+                        </div>
+                        <% } %>
+                    <% } %>
 
-                        <!-- Sección 2: Subir imágenes -->
-                        <div class="border-2 border-gray-200 rounded-xl p-6 space-y-4">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900">Subir imágenes</h3>
-                                <p class="text-sm text-gray-500 mt-1">Sube una o varias imágenes de productos (PNG, JPG, JPEG).</p>
+                    <form action="/admin/cargar_bulk" method="POST" enctype="multipart/form-data" id="bulkForm">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <div class="grid grid-cols-2 gap-6">
+
+                            <!-- Sección 1: Cargar archivo -->
+                            <div class="border-2 border-gray-200 rounded-xl p-6 space-y-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">Cargar archivo</h3>
+                                    <p class="text-sm text-gray-500 mt-1">Sube un CSV o Excel con el listado de productos.</p>
+                                    <p class="text-xs text-gray-400 mt-1">Columnas requeridas (en orden): <span class="font-mono">nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave</span></p>
+                                    <p class="text-xs text-gray-400 mt-0.5">La clave no debe exceder 7 caracteres. La url_imagen debe coincidir con el nombre del archivo subido en "Subir imágenes".</p>
+                                </div>
+                                <label id="csvDropZone" class="flex flex-col items-center justify-center gap-2 p-10 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all">
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                    </svg>
+                                    <span id="csvLabel" class="text-sm text-gray-600 font-medium text-center">Haz clic o arrastra tu archivo CSV o Excel</span>
+                                    <input id="bulkFile" name="archivoCSV" type="file" accept=".csv,.xlsx,.xls" hidden />
+                                </label>
                             </div>
-                            <form action="/admin/cargar_imagenes" method="POST" enctype="multipart/form-data" id="imagenesForm">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                            <!-- Sección 2: Subir imágenes -->
+                            <div class="border-2 border-gray-200 rounded-xl p-6 space-y-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">Subir imágenes</h3>
+                                    <p class="text-sm text-gray-500 mt-1">Sube una o varias imágenes de productos (PNG, JPG, JPEG).</p>
+                                </div>
                                 <label id="imgDropZone" class="flex flex-col items-center justify-center gap-2 p-10 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all">
                                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -198,13 +220,15 @@
                                     <span id="imgLabel" class="text-sm text-gray-600 font-medium text-center">Haz clic o arrastra tus imágenes aquí</span>
                                     <input id="imagenesInput" name="imagenes" type="file" accept="image/png,image/jpg,image/jpeg" multiple hidden />
                                 </label>
-                                <button type="submit" class="w-full mt-4 py-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all">
-                                    Subir imágenes
-                                </button>
-                            </form>
+                            </div>
+
                         </div>
 
-                    </div>
+                        <!-- Botón único para subir ambos -->
+                        <button type="submit" class="w-full mt-6 py-3 bg-blue-600 text-white font-bold text-sm rounded-lg hover:bg-blue-700 transition-all">
+                            Subir archivos a la base de datos
+                        </button>
+                    </form>
                 </div>
             </div>
         </main>
@@ -319,7 +343,7 @@
         <% } %>
 
         // Abrir tab de carga masiva si viene respuesta de esa sección
-        <% if (mensajeBulk || errorBulk) { %>
+        <% if (mensajeBulk || errorBulk || resultadoCSV) { %>
             const bulkTab = document.querySelector('[data-product-tab="bulk"]');
             if (bulkTab) bulkTab.click();
         <% } %>
