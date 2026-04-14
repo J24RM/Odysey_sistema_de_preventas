@@ -9,6 +9,8 @@ const multer = require('multer');
 const csrf = require('csurf');
 const csrfProtection = csrf();
 const { log } = require('./utils/logger');
+const pgSession = require('connect-pg-simple')(session);
+
 
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
@@ -26,7 +28,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
-const pgSession = require('connect-pg-simple')(session);
+
+app.set('trust proxy', 1);
 
 app.use(session({
     store: new pgSession({
