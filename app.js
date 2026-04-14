@@ -46,6 +46,9 @@ app.use(session({
     }
 }));
 
+// Para que cargue mas rapido
+const compression = require('compression');
+app.use(compression()); 
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
