@@ -1,4 +1,5 @@
 const Producto = require('../models/producto.model');
+const Calificacion = require('../models/calificacion.model');
 const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs');
@@ -202,12 +203,17 @@ exports.getProductoCliente = async (request, response) => {
                 '/img/botePintura.png'
             ]
         };
-        console.log(producto.imagen)
+        const [calificacionExistente, resenas] = await Promise.all([
+            Calificacion.buscarPorUsuarioYProducto(request.session.usuario, id),
+            Calificacion.obtenerPorProducto(id)
+        ]);
 
         response.render('cliente/product', {
             usuario: request.session.usuario,
             productoId: id,
-            producto
+            producto,
+            calificacion: calificacionExistente,
+            resenas
         });
     } catch (error) {
         console.error('Error in getProductoCliente:', error);
