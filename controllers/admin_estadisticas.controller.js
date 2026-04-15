@@ -31,6 +31,60 @@ exports.getEstadisticasSucursales = (request, response) => {
     response.render('admin/stats_sucursales', { usuario: request.session.usuario });
 };
 
+// Estadisitcas Por Producto
+
+exports.getEstadisticasDetalleProducto = async (request, response) => {
+    try {
+        const { id } = request.params;
+        const { periodo = "mes" } = request.query;
+
+        const { inicio, fin } = obtenerRangoFechas(periodo);
+        const { inicioAnterior, finAnterior } = obtenerPeriodoAnterior(inicio, fin);
+
+        const actual = await statsModel.getStatsProductoById(id, inicio, fin);
+        const anterior = await statsModel.getStatsProductoById(id, inicioAnterior, finAnterior);
+
+        const resumen = calcularComparacionProducto(actual, anterior);
+
+        const ordenesPorDia = await statsModel.getOrdenesPorDia(id, inicio, fin);
+        const ordenesPorDiaAnterior = await statsModel.getOrdenesPorDia(id, inicioAnterior, finAnterior);
+
+        const sucursales = await statsModel.getSucursalesProducto(id, inicio, fin);
+
+        response.render('admin/stats_producto_detalle', {
+        usuario: request.session.usuario,
+        producto: resumen,
+        ordenesPorDia,
+        ordenesPorDiaAnterior,
+        sucursales,
+        periodo
+        });
+
+    } catch (error) {
+        console.error(error);
+        response.status(500).send("Error en detalle de producto");
+    }
+    };
+
+function calcularComparacionProducto(actual, anterior) {
+    const act = actual[0] || { cantidad: 0, ventas: 0 };
+    const prev = anterior[0] || { cantidad: 0, ventas: 0 };
+
+    const porcentajeCantidad = prev.cantidad === 0
+        ? 100
+        : ((act.cantidad - prev.cantidad) / prev.cantidad) * 100;
+
+    const porcentajeVentas = prev.ventas === 0
+        ? 100
+        : ((act.ventas - prev.ventas) / prev.ventas) * 100;
+
+    return {
+        ...act,
+        porcentajeCantidad,
+        porcentajeVentas
+    };
+    }
+
 exports.getEstadisticasProductos = async (request, response) => {
     try {
         const { periodo = "mes", busqueda = "" } = request.query;
