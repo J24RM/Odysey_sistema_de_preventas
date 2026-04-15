@@ -33,6 +33,15 @@ module.exports = class Producto {
         return fixProducto(producto);
     }
 
+    static async encontrarProductosPorIds(ids) {
+    const { data, error } = await supabase
+        .from('producto')
+        .select('*')
+        .in('id_producto', ids);
+    if (error) throw error;
+    return data || [];
+    }
+
     static async encontrarProductoPorId(id_producto){
         const {data:detalleProducto ,error} = await supabase
             .from('producto')

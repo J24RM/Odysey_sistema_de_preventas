@@ -16,7 +16,7 @@ exports.getOrdenes = async (req, res) => {
 
 exports.registrarOrden = async (req, res) => {
     try {
-        console.log("Se inicio el registro de la Orden")
+
         const id_usuario = req.session.usuario;
         const correo = req.session.correo || "a01713550@tec.mx"; 
 
@@ -34,35 +34,36 @@ exports.registrarOrden = async (req, res) => {
             return res.redirect('/cart?error=' + encodeURIComponent("No hay productos en el carrito"));
         }
 
+
+        const ids = productos.map(item => item.id_producto);
+        const productosData = await productoModel.encontrarProductosPorIds(ids);
+        const productosMap = Object.fromEntries(productosData.map(p => [p.id_producto, p]));
+
         let subtotal = 0;
         let detalleHTML = "";
-
         for (let item of productos) {
-            const producto = await productoModel.encontrarProductoPorId(item.id_producto);
-            
-            const precio = parseFloat(producto[0].precio_unitario);           
-            const totalProducto = parseFloat((precio * item.cantidad).toFixed(2)); 
+            const producto = productosMap[item.id_producto];
+            const precio = parseFloat(producto.precio_unitario);
+            const totalProducto = parseFloat((precio * item.cantidad).toFixed(2));
             subtotal += totalProducto;
-
             detalleHTML += `
                 <tr>
-                    <td>${producto[0].nombre}</td>
+                    <td>${producto.nombre}</td>
                     <td>${item.cantidad}</td>
-                    <td>$${precio.toFixed(2)}</td>           
-                    <td>$${totalProducto.toFixed(2)}</td>    
+                    <td>$${precio.toFixed(2)}</td>
+                    <td>$${totalProducto.toFixed(2)}</td>
                 </tr>
             `;
         }
 
         subtotal = parseFloat(subtotal.toFixed(2));
 
-        const folio = generarFolio();
-        let id_sucursal = req.session.id_sucursal || 2;
+        const folio = 'A' + String(orden.id_orden).padStart(4, '0');
+        let sucursal_activa_id = req.session.sucursal_activa.id_sucursal;
 
-        await ordenModel.registrarOrden(id_carrito, subtotal, folio, id_sucursal);
+        await ordenModel.registrarOrden(id_carrito, subtotal, folio, sucursal_activa_id);
 
-        // Sacar el nombre de la sucursal
-        let sucursalNombre = req.session.sucursalNombre || "Apaseo"
+        let sucursalNombre = req.session.sucursal_activa.nombre_sucursal || ""
 
         const mailOptions = {
             from: process.env.MAIL_USER,
@@ -121,25 +122,8 @@ exports.registrarOrden = async (req, res) => {
     } catch (error) {
         return res.redirect('/cliente/mis-pedidos?error=' + encodeURIComponent("No se pudo realizar la orden"));
     }
-
-    function generarFolio() {
-        const now = new Date();
-
-        const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-        const mes = letras[now.getMonth()];
-        const dia = letras[now.getDay()];
-
-        const hora = String(now.getHours()).padStart(2, "0");
-        const min = String(now.getMinutes()).padStart(2, "0");
-        const seg = String(now.getSeconds()).padStart(2, "0");
-        const year = now.getFullYear();
-
-        const random = Math.floor(Math.random() * 90 + 10); // 2 dígitos extra
-
-        return `F${mes}${dia}${hora}${min}${seg}${year}${random}`;
-        }
 };
+
 
 exports.postCancelarOrden = async (req, res) => {
     try {
