@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require("path");
@@ -9,6 +9,8 @@ const multer = require('multer');
 const csrf = require('csurf');
 const csrfProtection = csrf();
 const { log } = require('./utils/logger');
+const pgSession = require('connect-pg-simple')(session);
+
 
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
@@ -26,11 +28,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
+
+app.set('trust proxy', 1);
+
 app.use(session({
-    secret: 'mi string secreto que debe ser un string aleatorio muy largo, no como éste',
-    resave: false, // La sesión no se guardará en cada petición, sino sólo se guardará si algo cambió
-    saveUninitialized: false, // Asegura que no se guarde una sesión para una petición que no lo necesita
+    store: new pgSession({
+        conString: process.env.DATABASE_URL,
+        tableName: 'session',
+        ssl: { rejectUnauthorized: false }
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 60 * 1000
+    }
 }));
+
+// Para que cargue mas rapido
+const compression = require('compression');
+app.use(compression()); 
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -177,5 +196,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en ${PORT}`);
 });
