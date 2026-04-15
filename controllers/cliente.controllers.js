@@ -70,7 +70,7 @@ exports.setSucursalActiva = async (request, response) => {
         const sucursal = sucursales.find(s => s.id_sucursal === parseInt(id_sucursal));
         if (!sucursal) return response.status(403).json({ error: 'Sucursal no autorizada' });
 
-        req.session.sucursal_activa = sucursal;
+        request.session.sucursal_activa = sucursal;
         return response.json({ sucursal_activa: sucursal });
     } catch (error) {
         console.error('Error en setSucursalActiva:', error);
