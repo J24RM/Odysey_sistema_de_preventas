@@ -27,8 +27,24 @@ exports.getEstadisticas = async (request, response) => {
     response.render('admin/stats', pageData);
 };
 
-exports.getEstadisticasSucursales = (request, response) => {
-    response.render('admin/stats_sucursales', { usuario: request.session.usuario });
+exports.getEstadisticasSucursales = async (request, response) => {
+    let pageData = {
+        usuario: request.session.usuario,
+        sucursales: [],
+        total: 0,
+        dbConnected: false
+    };
+
+    try {
+        const stats = await Estadisticas.getEstadisticasSucursales();
+        if (stats) {
+            pageData = { ...pageData, ...stats, dbConnected: true };
+        }
+    } catch (error) {
+        console.error('Error fetching estadísticas de sucursales:', error);
+    }
+
+    response.render('admin/stats_sucursales', pageData);
 };
 
 exports.getEstadisticasProductos = (request, response) => {
