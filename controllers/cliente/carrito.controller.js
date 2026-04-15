@@ -16,7 +16,7 @@ exports.getCarrito = async (request, response, next) => {
         }
         let productosCarrito = null;
         let detalleProductos = null;
-        let sucursal = "Apaseo"; // request.session.sucursal;
+        sucursal_activa = request.session.sucursal_activa || "";
 
         if (request.session.id_carrito != null) {
             productosCarrito = await detalle_ordenModel.detalleOrden(request.session.id_carrito);
@@ -35,7 +35,7 @@ exports.getCarrito = async (request, response, next) => {
             error: null,
             productosCarrito: productosCarrito,
             detalleProductos: detalleProductos,
-            sucursal: sucursal,
+            sucursal_activa: sucursal_activa,
             carrito: request.session.id_carrito,
         });
 
@@ -46,21 +46,18 @@ exports.getCarrito = async (request, response, next) => {
 
 exports.agregarItem = async (request, response, next) => {
     try {
-        // const id_usuario = request.session.id_usuario;
 
         // Obtener carrito
         const carrito = await ordenModel.obtenerOrdenEnEstadoCarrito(request.session.usuario);
         if(!carrito){
             const carrito = await ordenModel.crearCarrito(request.session.usuario);
             request.session.id_carrito = carrito.id_orden;
-            console.log("Se creo un carrito")
         }
 
         else{
             request.session.id_carrito = carrito.id_orden;
         }
 
-        console.log("Id del Carrito" + request.session.id_carrito);
 
         // Agregar producto
         await detalle_ordenModel.agregarProductoAlCarrito(

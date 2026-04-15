@@ -37,7 +37,7 @@
 
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-4xl font-black text-gray-900">Carrito</h1>
-      <span class="text-xl font-bold" style="color: #1FB5DF;">Sucursal: <%= sucursal %></span>
+      <span class="text-xl font-bold" style="color: #1FB5DF;">Sucursal: <%= sucursal_activa.nombre_sucursal %></span>
     </div>
 
     <hr class="border-gray-300 mb-0" />
@@ -81,18 +81,31 @@
             class="text-base font-semibold text-gray-900 hover:underline leading-snug">
           <%= producto.nombre %>
         </a>
+        
         <div class="flex items-center gap-4 mt-4">
           <div class="flex items-center gap-2 border-2 rounded-full px-3 py-1" style="border-color: #1FB5DF;">
             <button onclick="cambiarCantidad(<%= item.id_producto %>, -1)"
               class="text-gray-700 font-bold text-lg w-5 h-5 flex items-center justify-center hover:opacity-70 transition">−</button>
-            <span id="qty-<%= item.id_producto %>" class="qty text-sm font-semibold text-gray-800 w-4 text-center"><%= item.cantidad %></span>
+
+            <input
+              id="qty-<%= item.id_producto %>"
+              type="text"
+              value="<%= item.cantidad %>"
+              inputmode="numeric"
+              class="qty text-sm font-semibold text-gray-800 w-10 text-center outline-none"
+              oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+              onblur="inputCantidad(<%= item.id_producto %>)"
+            />
+
             <button onclick="cambiarCantidad(<%= item.id_producto %>, 1)"
               class="text-gray-700 font-bold text-lg w-5 h-5 flex items-center justify-center hover:opacity-70 transition">+</button>
+
           </div>
           <button onclick="eliminarProducto(<%= item.id_producto %>)"                                                                                                                           
             class="text-sm font-medium hover:underline" style="color: #1FB5DF;">Eliminar</button>
         </div>
       </div>
+
 
       <!-- Precio -->
       <div class="text-right flex-shrink-0">
