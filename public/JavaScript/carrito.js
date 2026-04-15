@@ -17,6 +17,12 @@ function actualizarSubtotal() {
   document.getElementById('subtotal-display').textContent =
     '$ ' + subtotal.toLocaleString('es-MX');
 
+  let total = subtotal * 1.16;
+
+  document.getElementById('total-display').textContent =
+    '$ ' + total.toLocaleString('es-MX');
+
+
   document.getElementById('qty-display').textContent =
     'Cantidad de productos: ' + totalQty;
 }
