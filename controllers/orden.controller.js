@@ -16,7 +16,7 @@ exports.getOrdenes = async (req, res) => {
 
 exports.registrarOrden = async (req, res) => {
     try {
-        console.log("Se inicio el registro de la Orden")
+
         const id_usuario = req.session.usuario;
         const correo = req.session.correo || "a01713550@tec.mx"; 
 
@@ -34,22 +34,24 @@ exports.registrarOrden = async (req, res) => {
             return res.redirect('/cart?error=' + encodeURIComponent("No hay productos en el carrito"));
         }
 
+
+        const ids = productos.map(item => item.id_producto);
+        const productosData = await productoModel.encontrarProductosPorIds(ids);
+        const productosMap = Object.fromEntries(productosData.map(p => [p.id_producto, p]));
+
         let subtotal = 0;
         let detalleHTML = "";
-
         for (let item of productos) {
-            const producto = await productoModel.encontrarProductoPorId(item.id_producto);
-            
-            const precio = parseFloat(producto[0].precio_unitario);           
-            const totalProducto = parseFloat((precio * item.cantidad).toFixed(2)); 
+            const producto = productosMap[item.id_producto];
+            const precio = parseFloat(producto.precio_unitario);
+            const totalProducto = parseFloat((precio * item.cantidad).toFixed(2));
             subtotal += totalProducto;
-
             detalleHTML += `
                 <tr>
-                    <td>${producto[0].nombre}</td>
+                    <td>${producto.nombre}</td>
                     <td>${item.cantidad}</td>
-                    <td>$${precio.toFixed(2)}</td>           
-                    <td>$${totalProducto.toFixed(2)}</td>    
+                    <td>$${precio.toFixed(2)}</td>
+                    <td>$${totalProducto.toFixed(2)}</td>
                 </tr>
             `;
         }
@@ -57,12 +59,11 @@ exports.registrarOrden = async (req, res) => {
         subtotal = parseFloat(subtotal.toFixed(2));
 
         const folio = 'A' + String(orden.id_orden).padStart(4, '0');
-        let id_sucursal = req.session.id_sucursal || 2;
+        let sucursal_activa_id = req.session.sucursal_activa.id_sucursal;
 
-        await ordenModel.registrarOrden(id_carrito, subtotal, folio, id_sucursal);
+        await ordenModel.registrarOrden(id_carrito, subtotal, folio, sucursal_activa_id);
 
-        // Sacar el nombre de la sucursal
-        let sucursalNombre = req.session.sucursalNombre || "Apaseo"
+        let sucursalNombre = req.session.sucursal_activa.nombre_sucursal || ""
 
         const mailOptions = {
             from: process.env.MAIL_USER,
