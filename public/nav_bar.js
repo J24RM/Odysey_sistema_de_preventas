@@ -86,11 +86,11 @@ function renderSucursalSelector(sucursales, sucursal_activa) {
 
 // ─── Construcción del modal ───────────────────────────────────────────────────
 
-function buildModalContent(data) {
+function buildModalContent(data, opts = {}) {
     const { usuario, cuentas, cuenta_activa, sucursal_activa, sucursales, multiple_cuentas } = data;
 
-    // Alerta si hay múltiples cuentas y ninguna seleccionada
-    const alerta = (multiple_cuentas && !cuenta_activa) ? `
+    // Alerta si no hay sucursal activa (puede venir del carrito o por múltiples cuentas sin seleccionar)
+    const alerta = (opts.forzado || (multiple_cuentas && !cuenta_activa)) ? `
     <div class="mb-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
         <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -101,7 +101,7 @@ function buildModalContent(data) {
     // Selector de cuenta (solo si hay más de una)
     let cuentaSelector = '';
     if (multiple_cuentas) {
-        const opts = cuentas.map(c =>
+        const cuentaOpts = cuentas.map(c =>
             `<option value="${c.id_cuenta}" ${cuenta_activa && cuenta_activa.id_cuenta === c.id_cuenta ? 'selected' : ''}>${c.nombre_dueno} — ${c.rfc}</option>`
         ).join('');
         cuentaSelector = `
@@ -109,12 +109,30 @@ function buildModalContent(data) {
             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Cambiar cuenta</label>
             <select id="selectCuenta" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0078A9] bg-white">
                 <option value="">— Seleccionar cuenta —</option>
-                ${opts}
+                ${cuentaOpts}
             </select>
         </div>`;
     }
 
     const nombreUsuario = usuario.Nombre_usuario || usuario.nombre_usuario || '—';
+
+    const footer = opts.forzado
+        ? `<div class="pt-4 flex justify-end">
+               <button id="btnAceptarModal"
+                       class="text-sm font-semibold text-white bg-[#0078A9] px-4 py-2 rounded-md hover:bg-[#005f87] transition-colors">
+                   Aceptar
+               </button>
+           </div>`
+        : `<div class="pt-4 flex justify-between items-center">
+               <a href="/logout"
+                  class="text-sm font-semibold text-red-500 border border-red-200 px-4 py-2 rounded-md hover:bg-red-50 transition-colors">
+                   Cerrar sesión
+               </a>
+               <button id="btnAceptarModal"
+                       class="text-sm font-semibold text-white bg-[#0078A9] px-4 py-2 rounded-md hover:bg-[#005f87] transition-colors">
+                   Aceptar
+               </button>
+           </div>`;
 
     return `
     ${alerta}
@@ -144,17 +162,24 @@ function buildModalContent(data) {
     </div>
 
     <!-- Footer -->
-    <div class="pt-4 flex justify-end">
-        <a href="/logout"
-           class="text-sm font-semibold text-gray-600 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">
-            Cerrar sesión
-        </a>
-    </div>`;
+    ${footer}`;
 }
 
 // ─── Eventos del modal ────────────────────────────────────────────────────────
 
-function attachModalEvents() {
+function attachModalEvents(opts = {}) {
+    // Botón Aceptar (cierra el modal igual que la X)
+    const btnAceptar = document.getElementById('btnAceptarModal');
+    if (btnAceptar) {
+        btnAceptar.addEventListener('click', () => {
+            const modal = document.getElementById('modalSelector');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        });
+    }
+
     // Cambio de cuenta
     const selectCuenta = document.getElementById('selectCuenta');
     if (selectCuenta) {
@@ -174,6 +199,10 @@ function attachModalEvents() {
                 renderSucursalInfo(result.sucursal_activa);
 
             actualizarNavbarSucursal(result.sucursal_activa);
+
+            // Actualizar la sucursal activa global (para validación del carrito)
+            window._sucursalActivaId = result.sucursal_activa ? result.sucursal_activa.id_sucursal : null;
+
             attachSucursalEvent();
         });
     }
@@ -194,28 +223,38 @@ function attachSucursalEvent() {
         document.getElementById('sucursalInfo').innerHTML =
             renderSucursalInfo(result.sucursal_activa);
         actualizarNavbarSucursal(result.sucursal_activa);
+
+        // Actualizar la sucursal activa global (para validación del carrito)
+        window._sucursalActivaId = result.sucursal_activa ? result.sucursal_activa.id_sucursal : null;
     });
 }
 
 // ─── Abrir modal de perfil ────────────────────────────────────────────────────
 
-document.getElementById("btnPerfil").addEventListener("click", async () => {
-    title.textContent = "Mi Perfil";
+window.abrirModalPerfil = async function(opts = {}) {
+    const modal = document.getElementById('modalSelector');
+    title.textContent = opts.forzado ? "Selecciona tu sucursal" : "Mi Perfil";
     body.innerHTML = `
     <div class="flex justify-center items-center py-10">
         <div class="w-6 h-6 border-2 border-[#0078A9] border-t-transparent rounded-full animate-spin"></div>
     </div>`;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 
     try {
         const res = await fetch('/cliente/perfil-datos', {
             headers: { 'Accept': 'application/json' }
         });
         const data = await res.json();
-        body.innerHTML = buildModalContent(data);
-        attachModalEvents();
+        body.innerHTML = buildModalContent(data, opts);
+        attachModalEvents(opts);
     } catch (err) {
         body.innerHTML = `<p class="text-red-500 text-sm text-center py-6">Error al cargar el perfil.</p>`;
     }
+};
+
+document.getElementById("btnPerfil").addEventListener("click", () => {
+    window.abrirModalPerfil();
 });
 
 // ─── Lógica de apertura/cierre del modal ─────────────────────────────────────

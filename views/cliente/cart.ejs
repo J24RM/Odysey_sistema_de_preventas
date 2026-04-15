@@ -135,6 +135,18 @@
 
 <meta name="csrf-token" content="<%= csrfToken %>">
 <script src="/JavaScript/carrito.js"></script>
+
+<script>
+  // Inicializar la sucursal activa desde la sesión del servidor
+  window._sucursalActivaId = <%- locals.sucursal_activa ? locals.sucursal_activa.id_sucursal : 'null' %>;
+
+  document.querySelector('form[action="/orden/registrar"]').addEventListener('submit', function(e) {
+    if (!window._sucursalActivaId) {
+      e.preventDefault();
+      window.abrirModalPerfil({ forzado: true });
+    }
+  });
+</script>
 </body>
 </html>
 
