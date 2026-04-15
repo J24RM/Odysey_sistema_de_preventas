@@ -75,8 +75,8 @@ function renderSucursalSelector(sucursales, sucursal_activa) {
         `<option value="${s.id_sucursal}" ${sucursal_activa && sucursal_activa.id_sucursal === s.id_sucursal ? 'selected' : ''}>${s.nombre_sucursal}</option>`
     ).join('');
     return `
-    <div class="mb-3">
-        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Cambiar sucursal</label>
+    <div class="mt-4 mb-3">
+        <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Cambiar sucursal</label>
         <select id="selectSucursal" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0078A9] bg-white">
             <option value="">— Seleccionar sucursal —</option>
             ${opts}
@@ -105,8 +105,8 @@ function buildModalContent(data, opts = {}) {
             `<option value="${c.id_cuenta}" ${cuenta_activa && cuenta_activa.id_cuenta === c.id_cuenta ? 'selected' : ''}>${c.nombre_dueno} — ${c.rfc}</option>`
         ).join('');
         cuentaSelector = `
-        <div class="mb-3">
-            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Cambiar cuenta</label>
+        <div class="mt-4 mb-3">
+            <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Cambiar cuenta</label>
             <select id="selectCuenta" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0078A9] bg-white">
                 <option value="">— Seleccionar cuenta —</option>
                 ${cuentaOpts}
@@ -140,7 +140,7 @@ function buildModalContent(data, opts = {}) {
     <!-- Datos del usuario -->
     <div class="flex items-center gap-4 pb-4 border-b border-gray-100">
         <img src="/img/iconoPerfil.png" alt="Perfil"
-             class="w-14 h-14 rounded-full object-cover border-2 border-gray-200 flex-shrink-0">
+            class="w-14 h-14 rounded-full object-cover border-2 border-gray-200 flex-shrink-0">
         <div>
             <p class="font-bold text-base text-gray-800">${nombreUsuario}</p>
             <p class="text-sm text-gray-500">${usuario.email}</p>
@@ -149,16 +149,16 @@ function buildModalContent(data, opts = {}) {
 
     <!-- Cuenta -->
     <div class="py-4 border-b border-gray-100">
-        <h3 class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Cuenta</h3>
-        ${cuentaSelector}
+        <h3 class="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-3">Cuenta</h3>
         <div id="cuentaInfo">${renderCuentaInfo(cuenta_activa)}</div>
+        ${cuentaSelector}
     </div>
 
     <!-- Sucursal -->
     <div class="py-4 border-b border-gray-100">
-        <h3 class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Sucursal</h3>
-        <div id="sucursalSelectorContainer">${renderSucursalSelector(sucursales, sucursal_activa)}</div>
+        <h3 class="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-3">Sucursal</h3>
         <div id="sucursalInfo">${renderSucursalInfo(sucursal_activa)}</div>
+        <div id="sucursalSelectorContainer">${renderSucursalSelector(sucursales, sucursal_activa)}</div>
     </div>
 
     <!-- Footer -->
