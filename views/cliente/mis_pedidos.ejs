@@ -473,11 +473,13 @@ document.querySelectorAll('.pedidos-row').forEach(row => {
             modal.querySelector('.btn-exportar-small').onclick = () => {
                 const folioModal = document.getElementById('modal-folio').textContent;
                 const fechaModal = document.getElementById('modal-fecha').textContent;
+                const totalModal = document.getElementById('modal-total').textContent;
                 const subtotalModal = document.getElementById('modal-subtotal').textContent;
                 let csv = `"DETALLE DE ORDEN - PPG Industries"\n`;
                 csv += `"Folio:","${folioModal}"\n`;
                 csv += `"Fecha:","${fechaModal}"\n`;
-                csv += `"Subtotal:","$${subtotalModal}"\n\n`;
+                csv += `"Subtotal:","$${subtotalModal}"\n`;
+                csv += `"Total (IVA incluido):","$${totalModal}"\n\n`;
                 csv += '"Producto","SKU","Unidades","Precio Unitario","Subtotal"\n';
                 detalles.forEach(d => {
                     const nombre = (d.producto && d.producto.nombre) ? d.producto.nombre.replace(/"/g, '""') : 'Producto Desconocido';
