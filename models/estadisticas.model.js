@@ -186,4 +186,42 @@ module.exports = class Estadisticas {
 
         return result;
     }
+
+    static async getEstadisticasSucursales() {
+        if (!supabase) return null;
+
+        // 1. Traer todas las órdenes con su sucursal
+        const { data: ordenes } = await supabase
+            .from('orden')
+            .select('id_sucursal');
+
+        if (!ordenes || ordenes.length === 0) {
+            return { sucursales: [], total: 0 };
+        }
+
+        // 2. Agrupar por id_sucursal
+        const conteo = {};
+        for (const ord of ordenes) {
+            const id = ord.id_sucursal;
+            if (!id) continue;
+            conteo[id] = (conteo[id] || 0) + 1;
+        }
+
+        // 3. Traer nombres de sucursales
+        const ids = Object.keys(conteo);
+        const { data: sucursalesData } = await supabase
+            .from('sucursal')
+            .select('id_sucursal, nombre_sucursal')
+            .in('id_sucursal', ids);
+
+        // 4. Construir el array resultado, ordenado de mayor a menor
+        const sucursales = (sucursalesData || []).map(s => ({
+            nombre: s.nombre_sucursal,
+            total: conteo[s.id_sucursal] || 0
+        })).sort((a, b) => b.total - a.total);
+
+        const total = ordenes.length;
+
+        return { sucursales, total };
+    }
 };
