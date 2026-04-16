@@ -224,4 +224,50 @@ module.exports = class Estadisticas {
 
         return { sucursales, total };
     }
+
+    static async getFrequenciaSucursales() {
+        if (!supabase) return null;
+
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hace30Dias.getDate() - 30);
+
+        // 1. Traer órdenes de los últimos 30 días
+        const { data: ordenes } = await supabase
+            .from('orden')
+            .select('id_sucursal, fecha_realizada')
+            .gte('fecha_realizada', hace30Dias.toISOString());
+
+        if (!ordenes || ordenes.length === 0) {
+            return { frecuencias: [] };
+        }
+
+        // 2. Agrupar conteo por sucursal
+        const conteo = {};
+        for (const ord of ordenes) {
+            const id = ord.id_sucursal;
+            if (!id) continue;
+            conteo[id] = (conteo[id] || 0) + 1;
+        }
+
+        // 3. Traer nombres de sucursales
+        const ids = Object.keys(conteo);
+        const { data: sucursalesData } = await supabase
+            .from('sucursal')
+            .select('id_sucursal, nombre_sucursal')
+            .in('id_sucursal', ids);
+
+        // 4. Calcular frecuencia: pedidos / 4.3 semanas
+        const SEMANAS_EN_30_DIAS = 4.3;
+        const frecuencias = (sucursalesData || []).map(s => {
+            const totalMes = conteo[s.id_sucursal] || 0;
+            const pedidosPorSemana = Math.round((totalMes / SEMANAS_EN_30_DIAS) * 10) / 10;
+            return {
+                nombre: s.nombre_sucursal,
+                totalMes,
+                pedidosPorSemana
+            };
+        }).sort((a, b) => b.pedidosPorSemana - a.pedidosPorSemana);
+
+        return { frecuencias };
+    }
 };
