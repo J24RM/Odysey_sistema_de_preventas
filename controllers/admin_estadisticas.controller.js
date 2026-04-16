@@ -128,6 +128,64 @@ exports.getEstadisticasProductos = async (request, response) => {
     }
 };
 
+exports.exportarEstadisticasProductosCSV = async (request, response) => {
+    try {
+        const periodo = request.query.periodo || "semana";
+        const { busqueda = "" } = request.query;
+        const { inicio, fin } = obtenerRangoFechas(periodo);
+        const { inicioAnterior, finAnterior } = obtenerPeriodoAnterior(inicio, fin, periodo);
+
+        const actual = await Estadisticas.getStatsProductos(inicio, fin);
+        const anterior = await Estadisticas.getStatsProductos(inicioAnterior, finAnterior);
+
+        let productos = calcularComparacion(actual, anterior);
+
+        if (busqueda) {
+            productos = productos.filter(p =>
+                p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+            );
+        }
+
+        
+        const encabezados = [
+            "Producto",
+            "Cantidad Actual",
+            "Ventas Actuales",
+            "Cantidad Anterior",
+            "Ventas Anteriores",
+            "% Diferencia Cantidad",
+            "% Diferencia Ventas"
+        ].join(",");
+
+        const mapaAnterior = new Map();
+        anterior.forEach(p => mapaAnterior.set(p.id_producto, p));
+
+        const filas = productos.map(p => {
+            const prev = mapaAnterior.get(p.id_producto) || { cantidad: 0, ventas: 0 };
+            const nombre = `"${p.nombre.replace(/"/g, '""')}"`; 
+            return [
+                nombre,
+                p.cantidad,
+                p.ventas,
+                prev.cantidad,
+                "$" + prev.ventas,
+                Math.round(p.porcentajeCantidad),
+                Math.round(p.porcentajeVentas)
+            ].join(",");
+        });
+
+        const csv = [encabezados, ...filas].join("\n");
+
+        response.setHeader("Content-Type", "text/csv; charset=utf-8");
+        response.setHeader("Content-Disposition", `attachment; filename="estadisticas_productos_${periodo}.csv"`);
+        response.send("\uFEFF" + csv); 
+
+    } catch (error) {
+        console.error(error);
+        response.status(500).send("Error al exportar estadísticas");
+    }
+};
+
 function obtenerRangoFechas(periodo = "mes") {
     const hoy = new Date();
     let inicio, fin;
