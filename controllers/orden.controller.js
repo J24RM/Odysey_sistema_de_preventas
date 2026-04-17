@@ -2,124 +2,73 @@ const ordenModel = require('../models/orden.model');
 const detalleModel = require("../models/detalle_orden.model");
 const productoModel = require("../models/producto.model");
 const configuracionModel = require("../models/configuracion.model")
-const transporter = require("../utils/nodemailer");
 const supabase = require('../utils/supabase');
 const PDFDocument = require('pdfkit');
 const SVGtoPDF = require('svg-to-pdfkit');
 const path = require('path');
 const fs = require('fs');
 const { log } = require('../utils/logger');
+const { Resend } = require('resend');
 
 exports.getOrdenes = async (req, res) => {
 
 };
 
+
 exports.registrarOrden = async (req, res) => {
     try {
-
         const id_usuario = req.session.usuario;
-        const correo = req.session.correo || "a01713550@tec.mx"; 
+        const correo = req.session.correo || "rodriguezmendozajesus8@gmail.com";
 
-        const orden = await ordenModel.obtenerOrdenEnEstadoCarrito(id_usuario);
+        const orden = await ordenModel.registrarOrden(id_usuario);
+        const { folio, subtotal, productos } = orden;
 
-        if(!orden){
-            return res.redirect('/cart?error=' + encodeURIComponent("No hay productos en el carrito"));
-        }
-
-        const id_carrito = orden.id_orden;
-
-        const productos = await detalleModel.detalleOrden(id_carrito);
-
-        if(!productos || productos.length == 0){
-            return res.redirect('/cart?error=' + encodeURIComponent("No hay productos en el carrito"));
-        }
-
-
-        const ids = productos.map(item => item.id_producto);
-        const productosData = await productoModel.encontrarProductosPorIds(ids);
-        const productosMap = Object.fromEntries(productosData.map(p => [p.id_producto, p]));
-
-        let subtotal = 0;
         let detalleHTML = "";
-        for (let item of productos) {
-            const producto = productosMap[item.id_producto];
-            const precio = parseFloat(producto.precio_unitario);
-            const totalProducto = parseFloat((precio * item.cantidad).toFixed(2));
-            subtotal += totalProducto;
+        productos.forEach(p => {
             detalleHTML += `
                 <tr>
-                    <td>${producto.nombre}</td>
-                    <td>${item.cantidad}</td>
-                    <td>$${precio.toFixed(2)}</td>
-                    <td>$${totalProducto.toFixed(2)}</td>
+                    <td>${p.nombre}</td>
+                    <td>${p.cantidad}</td>
+                    <td>$${parseFloat(p.precio).toFixed(2)}</td>
+                    <td>$${parseFloat(p.total).toFixed(2)}</td>
                 </tr>
             `;
-        }
+        });
 
-        subtotal = parseFloat(subtotal.toFixed(2));
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-        const folio = 'A' + String(orden.id_orden).padStart(4, '0');
-        let sucursal_activa_id = req.session.sucursal_activa.id_sucursal;
-
-        await ordenModel.registrarOrden(id_carrito, subtotal, folio, sucursal_activa_id);
-
-        let sucursalNombre = req.session.sucursal_activa.nombre_sucursal || ""
-
-        const mailOptions = {
-            from: process.env.MAIL_USER,
+        resend.emails.send({
+            from: 'onboarding@resend.dev', 
             to: correo,
             subject: `Confirmación de Orden ${folio}`,
             html: `
-            <div style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
-                
-                <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:10px;">
-                
-                <h2 style="color:#333;"> Orden Confirmada</h2>
-                
-                <p>Tu orden ha sido registrada con éxito.</p>
-
+                <h2>Orden Confirmada</h2>
                 <p><strong>Folio:</strong> ${folio}</p>
-                <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
-                <p><strong>Sucursal:</strong> ${sucursalNombre}</p>
-
-                <h3>Detalle de la orden:</h3>
-
-                <table style="width:100%; border-collapse: collapse;">
-                    <thead>
-                    <tr style="background:#eee;">
-                        <th style="padding:8px; border:1px solid #ddd;">Producto</th>
-                        <th style="padding:8px; border:1px solid #ddd;">Cantidad</th>
-                        <th style="padding:8px; border:1px solid #ddd;">Precio</th>
-                        <th style="padding:8px; border:1px solid #ddd;">Total</th>
+                <table border="1">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Total</th>
                     </tr>
-                    </thead>
-                    <tbody>
                     ${detalleHTML}
-                    </tbody>
                 </table>
-
-                <h3 style="margin-top:20px;">Subtotal: $${subtotal.toFixed(2)}</h3>
-
-                <div style="text-align:center; margin-top:20px;">
-                    <a href="http://localhost:3000/"
-                    style="background:#007bff; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">
-                    Ver mis pedidos
-                    </a>
-                </div>
-
-                </div>
-
-            </div>
+                <h3>Subtotal: $${parseFloat(subtotal).toFixed(2)}</h3>
             `
-            };
-
-        await transporter.sendMail(mailOptions);
-
-        log('CLIENTE', 'PEDIDO REALIZADO', `id_cliente: ${id_usuario}, folio: ${folio}, subtotal: $${subtotal.toFixed(2)}`);
+        })
+        .catch(err => {
+            console.error("Error correo:", err);
+        });
 
         return res.redirect('/cliente/mis-pedidos?success=' + encodeURIComponent("Se envió un correo con el detalle de tu orden confirmada") + '&order=' + encodeURIComponent("Orden confirmada"));
 
     } catch (error) {
+
+        if (error.message.includes('No hay carrito') || error.message.includes('Carrito vacío')) {
+            return res.redirect('/cart?error=' + encodeURIComponent("No hay productos en el carrito"));
+        }
+
+        console.error(error);
         return res.redirect('/cliente/mis-pedidos?error=' + encodeURIComponent("No se pudo realizar la orden"));
     }
 };

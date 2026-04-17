@@ -36,20 +36,14 @@ module.exports = class Orden {
         return carrito;
     }
 
-    static async registrarOrden(id_orden, subtotal, folio, sucursal) {
-        const { data: orden, error} = await supabase
-            .from('orden')
-            .update({
-                estado: 'confirmada',
-                folio: folio,
-                subtotal: subtotal,
-                fecha_realizada: new Date().toLocaleString(),
-                id_sucursal: sucursal
-            })
-            .eq('id_orden', id_orden);
+    static async registrarOrden(id_usuario, ) {
+
+        const { data, error } = await supabase.rpc('confirmar_orden', {
+            p_id_usuario: id_usuario
+        });
 
         if (error) throw error;
-        return orden || [];
+        return data;
     }
 
     static async obtenerOrdenesPorUsuario(id_usuario) {
