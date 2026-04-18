@@ -66,11 +66,29 @@ exports.agregarItem = async (request, response, next) => {
             request.body.cantidad_ingresada
         );
 
-        log('CLIENTE', 'CARRITO: PRODUCTO AGREGADO', `id_cliente: ${request.session.usuario}, id_producto: ${request.body.id_producto}, cantidad: ${request.body.cantidad_ingresada}`);
-
         response.redirect('/cliente/home?info=' + encodeURIComponent("Se agrego el producto al carrito"))
 
     } catch (err) {
+        response.redirect(`/cliente/product/${request.body.id_producto}?error=` + encodeURIComponent("No se pudo agregar el producto al carrito"));
+    }
+};
+
+exports.agregarItem = async (request, response) => {
+    try {
+
+        const data = await detalle_ordenModel.agregarProductoAlCarrito(
+            request.session.usuario,
+            request.body.id_producto,
+            request.body.cantidad_ingresada
+        );
+
+
+        request.session.id_carrito = data;
+
+        response.redirect('/cliente/home?info=' + encodeURIComponent("Se agrego el producto al carrito"));
+
+    } catch (error) {
+        console.log(error)
         response.redirect(`/cliente/product/${request.body.id_producto}?error=` + encodeURIComponent("No se pudo agregar el producto al carrito"));
     }
 };
@@ -82,7 +100,6 @@ exports.actualizarItem = async (request, response, next) => {
     try {
         if (cantidad_ingresada == 0) {
             await detalle_ordenModel.eliminarProducto(request.session.id_carrito, id_producto);
-            log('CLIENTE', 'CARRITO: PRODUCTO ELIMINADO', `id_cliente: ${request.session.usuario}, id_producto: ${id_producto}`);
             return response.json({
                 eliminado: true ,
                 csrfToken: request.csrfToken()
@@ -93,7 +110,6 @@ exports.actualizarItem = async (request, response, next) => {
                 id_producto,
                 cantidad_ingresada
             );
-            log('CLIENTE', 'CARRITO: CANTIDAD ACTUALIZADA', `id_cliente: ${request.session.usuario}, id_producto: ${id_producto}, nueva_cantidad: ${cantidad_ingresada}`);
 
             return response.json({
                 eliminado: false,

@@ -230,3 +230,55 @@ begin
     end if;
 end;
 $$ language plpgsql;
+
+
+-- Agregar Producto al Carrito
+
+create function agregar_item_carrito (
+    p_id_usuario int,
+    p_id_producto int,
+    p_cantidad int
+)
+returns int as $$
+declare
+    v_carrito_id int;
+    v_producto record;
+begin
+    -- Buscar carrito existente
+    select id_orden into v_carrito_id
+    from orden
+    where id_usuario = p_id_usuario
+    and estado = 'carrito'
+    limit 1;
+
+    -- Si no existe, crearlo
+    if v_carrito_id is null then
+        insert into orden (id_usuario, estado, fecha_realizada)
+        values (p_id_usuario, 'carrito')
+        returning id_orden into v_carrito_id;
+    end if;
+
+    -- Buscar producto en el carrito 
+    select * into v_producto
+    from detalle_orden
+    where id_orden = v_carrito_id
+    and id_producto = p_id_producto
+    for update;
+
+    -- Si ya existe 
+    if found then
+        update detalle_orden
+        set cantidad = cantidad + p_cantidad
+        where id_orden = v_carrito_id
+        and id_producto = p_id_producto;
+
+    else
+        -- Si no existe 
+        insert into detalle_orden (id_orden, id_producto, cantidad)
+        values (v_carrito_id, p_id_producto, p_cantidad);
+    end if;
+
+    return v_carrito_id;
+end;
+$$ language plpgsql;
+
