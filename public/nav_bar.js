@@ -1,5 +1,6 @@
 const title = document.getElementById("modalTitle");
 const body  = document.getElementById("modalBody");
+const loader = document.getElementById('page-loader');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,7 @@ document.getElementById("btnPerfil").addEventListener("click", () => {
 
 // ─── Lógica de apertura/cierre del modal ─────────────────────────────────────
 
+
 document.addEventListener("DOMContentLoaded", () => {
     const modals = document.querySelectorAll('.tw-modal');
 
@@ -296,6 +298,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+
+
 // Actualiza el badge del carrito en la navbar
 function actualizarCartBadge(count) {
     const carritoLink = document.querySelector('a[href="/cart"]');
@@ -316,3 +320,32 @@ function actualizarCartBadge(count) {
 
     badge.textContent = count > 99 ? '+99' : count;
 }
+
+function showLoader() {
+    loader.style.opacity = '1';
+    loader.style.pointerEvents = 'all';
+  }
+
+  function hideLoader() {
+    loader.style.opacity = '0';
+    loader.style.pointerEvents = 'none';
+  }
+
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (!link) return;
+    if (
+      link.target === '_blank' ||
+      link.href.startsWith('javascript') ||
+      link.href.includes('#') ||
+      link.getAttribute('onclick')
+    ) return;
+    showLoader();
+  });
+
+  document.addEventListener('submit', function(e) {
+    showLoader();
+  });
+
+  window.addEventListener('pageshow', hideLoader);
+  window.addEventListener('load', hideLoader);
