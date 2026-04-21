@@ -55,6 +55,49 @@ exports.getEstadisticasSucursales = async (request, response) => {
     response.render('admin/stats_sucursales', pageData);
 };
 
+exports.getDetalleSucursalPagina = async (request, response) => {
+    const { id } = request.params;
+    const periodo = request.query.periodo || 'semana';
+
+    let pageData = {
+        usuario: request.session.usuario,
+        nombre: '',
+        edo: '',
+        municipio: '',
+        cantActual: 0,
+        subtotalActual: '0.00',
+        cambioCantidad: 0,
+        cambioSubtotal: 0,
+        periodo,
+        labels: [],
+        datosActual: [],
+        datosAnterior: [],
+        labelActual: 'Período Actual',
+        labelAnterior: 'Período Anterior',
+        id_sucursal: id,
+        dbConnected: false
+    };
+
+    try {
+        const detalle = await Estadisticas.getDetalleSucursalPagina(id, periodo);
+        if (detalle) pageData = { ...pageData, ...detalle, id_sucursal: id, dbConnected: true };
+    } catch (error) {
+        console.error('Error fetching detalle sucursal página:', error);
+    }
+
+    response.render('admin/stats_sucursal_detalle', pageData);
+};
+
+exports.getDetalleSucursal = async (request, response) => {
+    try {
+        const detalle = await Estadisticas.getDetalleSucursal(request.params.id);
+        response.json(detalle);
+    } catch (error) {
+        console.error('Error fetching detalle sucursal:', error);
+        response.status(500).json({ error: 'Error al obtener detalle' });
+    }
+};
+
 exports.getEstadisticasProductos = (request, response) => {
     response.render('admin/stats_productos', { usuario: request.session.usuario });
 };

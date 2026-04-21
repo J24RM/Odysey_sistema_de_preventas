@@ -224,6 +224,7 @@ module.exports = class Estadisticas {
 
         // 5. Construir el array resultado, top 10 ordenado de mayor a menor
         const sucursales = sucursalesData.map(s => ({
+            id_sucursal: s.id_sucursal,
             nombre: s.nombre_sucursal,
             total: conteo[s.id_sucursal] || 0
         })).sort((a, b) => b.total - a.total).slice(0, 10);
@@ -231,6 +232,148 @@ module.exports = class Estadisticas {
         const total = (ordenes || []).length;
 
         return { sucursales, total, estados, edoFiltro };
+    }
+
+    static async getDetalleSucursalPagina(id_sucursal, periodo = 'semana') {
+        if (!supabase) return null;
+
+        const hoy = new Date();
+
+        let inicioActual, inicioAnterior, finAnterior, labels;
+
+        if (periodo === 'semana') {
+            // Lunes de la semana actual
+            const diaSemana = hoy.getDay(); // 0=Dom, 1=Lun ... 6=Sáb
+            const diasDesdelLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+
+            inicioActual = new Date(hoy);
+            inicioActual.setDate(hoy.getDate() - diasDesdelLunes);
+            inicioActual.setHours(0, 0, 0, 0);
+
+            // Semana anterior: lunes anterior → domingo anterior
+            inicioAnterior = new Date(inicioActual);
+            inicioAnterior.setDate(inicioActual.getDate() - 7);
+
+            finAnterior = new Date(inicioActual);
+            finAnterior.setSeconds(finAnterior.getSeconds() - 1); // domingo 23:59:59
+
+            labels = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+            diasGrafica = 7;
+        } else {
+            // Mes: últimos 6 meses vs 6 meses anteriores, agrupados por mes
+            inicioActual   = new Date(hoy.getFullYear(), hoy.getMonth() - 5, 1, 0, 0, 0);
+            inicioAnterior = new Date(hoy.getFullYear(), hoy.getMonth() - 11, 1, 0, 0, 0);
+            finAnterior    = new Date(inicioActual.getTime() - 1);
+
+            const MESES_CORTOS_L = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            labels = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+                labels.push(MESES_CORTOS_L[d.getMonth()]);
+            }
+        }
+
+        // 1. Info de la sucursal
+        const { data: sucursal } = await supabase
+            .from('sucursal')
+            .select('nombre_sucursal, edo, deleg_municipio')
+            .eq('id_sucursal', id_sucursal)
+            .single();
+
+        // 2. Órdenes de ambos períodos en paralelo
+        const [{ data: ordenesActual }, { data: ordenesAnterior }] = await Promise.all([
+            supabase.from('orden')
+                .select('fecha_realizada, subtotal, estado')
+                .eq('id_sucursal', id_sucursal)
+                .gte('fecha_realizada', inicioActual.toISOString())
+                .neq('estado', 'cancelada'),
+            supabase.from('orden')
+                .select('fecha_realizada, subtotal')
+                .eq('id_sucursal', id_sucursal)
+                .gte('fecha_realizada', inicioAnterior.toISOString())
+                .lt('fecha_realizada', inicioActual.toISOString())
+                .neq('estado', 'cancelada')
+        ]);
+
+        // 3. KPIs
+        const cantActual   = (ordenesActual  || []).length;
+        const cantAnterior = (ordenesAnterior || []).length;
+        const subActual    = (ordenesActual  || []).reduce((s, o) => s + (parseFloat(o.subtotal) || 0), 0);
+        const subAnterior  = (ordenesAnterior || []).reduce((s, o) => s + (parseFloat(o.subtotal) || 0), 0);
+
+        const cambioCantidad = cantAnterior > 0 ? Math.round(((cantActual - cantAnterior) / cantAnterior) * 100) : (cantActual > 0 ? 100 : 0);
+        const cambioSubtotal = subAnterior  > 0 ? Math.round(((subActual  - subAnterior)  / subAnterior)  * 100) : (subActual  > 0 ? 100 : 0);
+
+        // 4. Datos para la gráfica día a día
+        const datosActual = [], datosAnterior = [];
+
+        if (periodo === 'semana') {
+            // Iterar lunes→domingo de la semana actual y de la anterior
+            for (let i = 0; i < 7; i++) {
+                const dActual = new Date(inicioActual);
+                dActual.setDate(inicioActual.getDate() + i);
+                const dActualStr = dActual.toISOString().split('T')[0];
+                datosActual.push((ordenesActual || []).filter(o => o.fecha_realizada.startsWith(dActualStr)).length);
+
+                const dAnt = new Date(inicioAnterior);
+                dAnt.setDate(inicioAnterior.getDate() + i);
+                const dAntStr = dAnt.toISOString().split('T')[0];
+                datosAnterior.push((ordenesAnterior || []).filter(o => o.fecha_realizada.startsWith(dAntStr)).length);
+            }
+        } else {
+            // Agrupar por mes: últimos 6 meses vs los 6 meses anteriores a esos
+            for (let i = 5; i >= 0; i--) {
+                const mesActual  = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+                const mes  = mesActual.getMonth();
+                const anio = mesActual.getFullYear();
+                datosActual.push((ordenesActual || []).filter(o => {
+                    const od = new Date(o.fecha_realizada);
+                    return od.getMonth() === mes && od.getFullYear() === anio;
+                }).length);
+
+                const mesAnt  = new Date(hoy.getFullYear(), hoy.getMonth() - i - 6, 1);
+                const mA  = mesAnt.getMonth();
+                const anioA = mesAnt.getFullYear();
+                datosAnterior.push((ordenesAnterior || []).filter(o => {
+                    const od = new Date(o.fecha_realizada);
+                    return od.getMonth() === mA && od.getFullYear() === anioA;
+                }).length);
+            }
+        }
+
+        // 5. Formatear fechas para la leyenda
+        const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const fmt = d => `${d.getDate()} ${MESES_CORTOS[d.getMonth()]}`;
+
+        let finActualLabel, finAnteriorLabel;
+        if (periodo === 'semana') {
+            const domingoActual = new Date(inicioActual);
+            domingoActual.setDate(inicioActual.getDate() + 6);
+            finActualLabel   = `${fmt(inicioActual)} - ${fmt(domingoActual)}`;
+            finAnteriorLabel = `${fmt(inicioAnterior)} - ${fmt(new Date(inicioActual.getTime() - 86400000))}`;
+        } else {
+            const primerMesActual   = new Date(hoy.getFullYear(), hoy.getMonth() - 5, 1);
+            const primerMesAnterior = new Date(hoy.getFullYear(), hoy.getMonth() - 11, 1);
+            const ultimoMesAnterior = new Date(hoy.getFullYear(), hoy.getMonth() - 6, 1);
+            finActualLabel   = `${MESES_CORTOS[primerMesActual.getMonth()]} - ${MESES_CORTOS[hoy.getMonth()]}`;
+            finAnteriorLabel = `${MESES_CORTOS[primerMesAnterior.getMonth()]} - ${MESES_CORTOS[ultimoMesAnterior.getMonth()]}`;
+        }
+
+        return {
+            nombre:              sucursal?.nombre_sucursal || 'Sucursal',
+            edo:                 sucursal?.edo             || '',
+            municipio:           sucursal?.deleg_municipio || '',
+            cantActual,
+            subtotalActual:      subActual.toFixed(2),
+            cambioCantidad,
+            cambioSubtotal,
+            periodo,
+            labels,
+            datosActual,
+            datosAnterior,
+            labelActual:         `Período Actual (${finActualLabel})`,
+            labelAnterior:       `Período Anterior (${finAnteriorLabel})`
+        };
     }
 
     static async getDetalleSucursal(id_sucursal) {
