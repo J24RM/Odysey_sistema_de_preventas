@@ -295,3 +295,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+// Actualiza el badge del carrito en la navbar
+function actualizarCartBadge(count) {
+    const carritoLink = document.querySelector('a[href="/cart"]');
+    if (!carritoLink) return;
+
+    let badge = carritoLink.querySelector('span');
+
+    if (count <= 0) {
+        if (badge) badge.remove();
+        return;
+    }
+
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none';
+        carritoLink.appendChild(badge);
+    }
+
+    badge.textContent = count > 99 ? '+99' : count;
+}

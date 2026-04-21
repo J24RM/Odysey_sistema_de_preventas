@@ -3,6 +3,7 @@ const detalle_ordenModel = require('../../models/detalle_orden.model');
 const productoModel = require('../../models/producto.model')
 const { compile } = require('ejs');
 const { log } = require('../../utils/logger');
+const cartcount = require('../../utils/cartcount');
 
 exports.getCarrito = async (request, response, next) => {
     try {
@@ -81,7 +82,6 @@ exports.actualizarItem = async (request, response, next) => {
     try {
         if (cantidad_ingresada == 0) {
             await detalle_ordenModel.eliminarProducto(request.session.id_carrito, id_producto);
-            log('CLIENTE', 'CARRITO: PRODUCTO ELIMINADO', `id_cliente: ${request.session.usuario}, id_producto: ${id_producto}`);
             return response.json({
                 eliminado: true ,
                 csrfToken: request.csrfToken()
@@ -92,11 +92,14 @@ exports.actualizarItem = async (request, response, next) => {
                 id_producto,
                 cantidad_ingresada
             );
-            log('CLIENTE', 'CARRITO: CANTIDAD ACTUALIZADA', `id_cliente: ${request.session.usuario}, id_producto: ${id_producto}, nueva_cantidad: ${cantidad_ingresada}`);
+
+            const items = await detalle_ordenModel.detalleOrden(request.session.id_carrito);
+            const nuevoTotal = items.reduce((sum, i) => sum + i.cantidad, 0);
 
             return response.json({
                 eliminado: false,
                 nuevaCantidad: cantidad_ingresada,
+                cartCount: nuevoTotal,
                 csrfToken: request.csrfToken()
             });
         }
