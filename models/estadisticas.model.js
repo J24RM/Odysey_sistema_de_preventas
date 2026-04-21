@@ -290,7 +290,7 @@ module.exports = class Estadisticas {
                 total_ordenes: stats.total_ordenes,
                 total_ventas: parseFloat(stats.total_ventas.toFixed(2))
             }))
-            .sort((a, b) => b.total_ordenes - a.total_ordenes)
+            .sort((a, b) => b.total_ventas - a.total_ventas)
             .slice(0, 10);
     }
 
