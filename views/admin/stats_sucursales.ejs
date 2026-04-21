@@ -38,8 +38,23 @@
 
     <!-- Volumen total por sucursal -->
     <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
-        <p class="text-[13px] font-bold text-gray-400 tracking-wide mb-1 uppercase">Volumen total de pedidos por sucursal</p>
-        <p class="text-sm text-gray-400 mb-6">Total acumulado: <span class="font-semibold text-gray-700"><%= total %> pedidos</span></p>
+        <div class="flex items-start justify-between mb-1">
+            <p class="text-[13px] font-bold text-gray-400 tracking-wide uppercase">Volumen total de pedidos por sucursal</p>
+            <!-- Filtro por estado -->
+            <form method="GET" action="/admin/stats/sucursales">
+                <select name="edo" onchange="this.form.submit()"
+                    class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="">Todos los estados</option>
+                    <% (estados || []).forEach(edo => { %>
+                        <option value="<%= edo %>" <%= edoFiltro === edo ? 'selected' : '' %>><%= edo %></option>
+                    <% }); %>
+                </select>
+            </form>
+        </div>
+        <p class="text-sm text-gray-400 mb-6">
+            Total acumulado: <span class="font-semibold text-gray-700"><%= total %> pedidos</span>
+            <% if (edoFiltro) { %> &nbsp;·&nbsp; Estado: <span class="font-semibold text-blue-600"><%= edoFiltro %></span><% } %>
+        </p>
 
         <% if (sucursales && sucursales.length > 0) { %>
             <% const maxTotal = sucursales[0].total; %>

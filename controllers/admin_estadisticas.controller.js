@@ -28,17 +28,21 @@ exports.getEstadisticas = async (request, response) => {
 };
 
 exports.getEstadisticasSucursales = async (request, response) => {
+    const edoFiltro = request.query.edo || null;
+
     let pageData = {
         usuario: request.session.usuario,
         sucursales: [],
         total: 0,
+        estados: [],
+        edoFiltro,
         frecuencias: [],
         dbConnected: false
     };
 
     try {
         const [statsVolumen, statsFrecuencia] = await Promise.all([
-            Estadisticas.getEstadisticasSucursales(),
+            Estadisticas.getEstadisticasSucursales(edoFiltro),
             Estadisticas.getFrequenciaSucursales()
         ]);
 

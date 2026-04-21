@@ -187,42 +187,50 @@ module.exports = class Estadisticas {
         return result;
     }
 
-    static async getEstadisticasSucursales() {
+    static async getEstadisticasSucursales(edoFiltro = null) {
         if (!supabase) return null;
 
-        // 1. Traer todas las órdenes con su sucursal
-        const { data: ordenes } = await supabase
-            .from('orden')
-            .select('id_sucursal');
+        // 1. Traer todos los estados disponibles para el dropdown
+        const { data: edosData } = await supabase
+            .from('sucursal')
+            .select('edo');
+        const estados = [...new Set((edosData || []).map(s => s.edo).filter(Boolean))].sort();
 
-        if (!ordenes || ordenes.length === 0) {
-            return { sucursales: [], total: 0 };
+        // 2. Traer sucursales (filtradas por estado si aplica)
+        let sucursalQuery = supabase
+            .from('sucursal')
+            .select('id_sucursal, nombre_sucursal, edo');
+        if (edoFiltro) sucursalQuery = sucursalQuery.eq('edo', edoFiltro);
+        const { data: sucursalesData } = await sucursalQuery;
+
+        if (!sucursalesData || sucursalesData.length === 0) {
+            return { sucursales: [], total: 0, estados, edoFiltro };
         }
 
-        // 2. Agrupar por id_sucursal
+        // 3. Traer órdenes solo de esas sucursales
+        const ids = sucursalesData.map(s => s.id_sucursal);
+        const { data: ordenes } = await supabase
+            .from('orden')
+            .select('id_sucursal')
+            .in('id_sucursal', ids);
+
+        // 4. Agrupar por sucursal
         const conteo = {};
-        for (const ord of ordenes) {
+        for (const ord of (ordenes || [])) {
             const id = ord.id_sucursal;
             if (!id) continue;
             conteo[id] = (conteo[id] || 0) + 1;
         }
 
-        // 3. Traer nombres de sucursales
-        const ids = Object.keys(conteo);
-        const { data: sucursalesData } = await supabase
-            .from('sucursal')
-            .select('id_sucursal, nombre_sucursal')
-            .in('id_sucursal', ids);
-
-        // 4. Construir el array resultado, ordenado de mayor a menor
-        const sucursales = (sucursalesData || []).map(s => ({
+        // 5. Construir el array resultado, ordenado de mayor a menor
+        const sucursales = sucursalesData.map(s => ({
             nombre: s.nombre_sucursal,
             total: conteo[s.id_sucursal] || 0
         })).sort((a, b) => b.total - a.total);
 
-        const total = ordenes.length;
+        const total = (ordenes || []).length;
 
-        return { sucursales, total };
+        return { sucursales, total, estados, edoFiltro };
     }
 
     static async getFrequenciaSucursales() {
