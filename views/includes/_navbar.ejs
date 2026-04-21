@@ -57,6 +57,45 @@
             <img src="/img/iconoPerfil.png" class="w-[40px] h-[40px] rounded-full object-cover shadow-sm border" alt="Perfil">
         </button>
     </div>
+    <!-- Carga -->
+<div id="page-loader" class="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-200" style="background-color: rgba(0,39,54,0.35);">
+  <div class="bg-white rounded-2xl shadow-xl px-10 py-8 flex flex-col items-center gap-4">
+    <div class="w-10 h-10 rounded-full border-4 border-gray-200 border-t-[#0078A9] animate-spin"></div>
+    <span class="text-sm font-semibold text-gray-700">Cargando...</span>
+  </div>
+</div>
+<script>
+  const loader = document.getElementById('page-loader');
+
+  function showLoader() {
+    loader.style.opacity = '1';
+    loader.style.pointerEvents = 'all';
+  }
+
+  function hideLoader() {
+    loader.style.opacity = '0';
+    loader.style.pointerEvents = 'none';
+  }
+
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a');
+    if (!link) return;
+    if (
+      link.target === '_blank' ||
+      link.href.startsWith('javascript') ||
+      link.href.includes('#') ||
+      link.getAttribute('onclick')
+    ) return;
+    showLoader();
+  });
+
+  document.addEventListener('submit', function(e) {
+    showLoader();
+  });
+
+  window.addEventListener('pageshow', hideLoader);
+  window.addEventListener('load', hideLoader);
+</script>
 </nav>
 
 <%- include('_modal_info') %>
