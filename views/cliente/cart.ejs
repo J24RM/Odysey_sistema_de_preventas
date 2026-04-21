@@ -158,9 +158,10 @@
   document.querySelector('form[action="/orden/registrar"]').addEventListener('submit', function(e) {
     if (!window._sucursalActivaId) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       window.abrirModalPerfil({ forzado: true });
     }
-  });
+  }, true); 
 </script>
 </body>
 </html>

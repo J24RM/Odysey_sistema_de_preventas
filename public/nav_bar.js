@@ -349,3 +349,4 @@ function showLoader() {
 
   window.addEventListener('pageshow', hideLoader);
   window.addEventListener('load', hideLoader);
+  
