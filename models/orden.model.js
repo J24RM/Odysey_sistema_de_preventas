@@ -90,6 +90,14 @@ module.exports = class Orden {
         return detalles || [];
     }
 
+    static async actualizarSucursalPorFolio(folio, id_sucursal) {
+        const { error } = await supabase
+            .from('orden')
+            .update({ id_sucursal })
+            .eq('folio', folio);
+        if (error) throw error;
+    }
+
     static async obtenerTodasLasOrdenes(page = 1, perPage = 20) {
         const from = (page - 1) * perPage;
         const to = from + perPage - 1;

@@ -19,8 +19,13 @@ exports.registrarOrden = async (req, res) => {
     try {
         const id_usuario = req.session.usuario;
         const correo = req.session.correo || "rodriguezmendozajesus8@gmail.com";
+        const id_sucursal = req.session.sucursal_activa?.id_sucursal ?? null;
 
         const orden = await ordenModel.registrarOrden(id_usuario);
+
+        if (id_sucursal && orden?.folio) {
+            await ordenModel.actualizarSucursalPorFolio(orden.folio, id_sucursal);
+        }
         const { folio, subtotal, productos } = orden;
 
         let detalleHTML = "";
