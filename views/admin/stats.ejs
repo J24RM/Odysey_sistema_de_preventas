@@ -4,23 +4,53 @@
 <head>
 <meta charset="UTF-8" />
 <title>Estadísticas Generales</title>
-<!-- Tailwind CSS CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    * {
-        font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    * { font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .chart-tooltip {
+        position: absolute;
+        pointer-events: none;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(4px);
+        color: white;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        min-width: 140px;
     }
+    .tooltip-header {
+        font-weight: 800;
+        font-size: 13px;
+        margin-bottom: 6px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: #f8fafc;
+    }
+    .tooltip-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+    }
+    .tooltip-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+    }
+    .hover-trigger { cursor: crosshair; }
 </style>
 </head>
 
 <body class="bg-gray-50">
 
 <%- include('partials/header.ejs') %>
-
 <%- include('partials/sidebar.ejs') %>
 
-<!-- MAIN CONTENT -->
 <main class="ml-48 pt-2 px-10 pb-9 flex-1 min-h-[calc(100vh-70px)]">
 
     <!-- Tabs -->
@@ -30,141 +60,282 @@
         <a href="/admin/stats/productos" class="tab-link px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors border-b-2 border-transparent -mb-[2px]" data-tab="/admin/stats/productos">Productos</a>
     </div>
 
-    <% if (!dbConnected) { %>
-    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
-        <p class="font-bold">Aviso</p>
-        <p>No se ha conectado Supabase. Mostrando datos de prueba. Configura tu `.env` para ver datos reales.</p>
-    </div>
-    <% } %>
+    <!-- Section title -->
+    <p class="text-[13px] font-bold text-gray-400 tracking-wide mb-5 uppercase">Estadísticas Generales del Mes (Resumen)</p>
 
-        <!-- TOP ROW: Best seller + Donut -->
-        <div class="grid grid-cols-2 gap-6 mb-6 max-[900px]:grid-cols-1">
+    <!-- Top 3-column cards -->
+    <div class="grid grid-cols-3 gap-5 mb-6">
 
-        <!-- Best seller card -->
-        <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
-            <p class="text-[13px] font-bold text-text-muted tracking-wide mb-4 uppercase">PRODUCTO MÁS VENDIDO
-            SEMANALMENTE</p>
-            <div class="flex items-center gap-5">
-            <div
-                class="w-[120px] h-[120px] shrink-0 flex items-center justify-center bg-[#f8f6fc] rounded-xl overflow-hidden p-2">
-                <% if (productoMasVendido && productoMasVendido.img) { %>
-                <img src="<%= productoMasVendido.img %>" alt="Producto" onerror="this.style.display='none'"
-                    class="max-w-full max-h-full object-contain" />
-                <% } else { %>
-                    <div class="text-5xl">📦</div>
+        <!-- Card 1: Producto más vendido -->
+        <div class="bg-white rounded-[14px] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
+            <p class="text-[11px] font-bold text-gray-400 tracking-wide uppercase mb-4">Producto más vendido semanalmente</p>
+            <% if (productoMasVendido) { %>
+            <div class="flex items-center gap-4">
+                <div class="w-24 h-24 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center border border-gray-100">
+                    <% if (productoMasVendido.img) { %>
+                        <img src="<%= productoMasVendido.img %>" alt="Producto" class="max-w-full max-h-full object-contain"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <span class="text-3xl hidden items-center justify-center">📦</span>
+                    <% } else { %>
+                        <span class="text-3xl">📦</span>
                     <% } %>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-gray-800 leading-snug"><%= productoMasVendido.nombre %></p>
+                    <% if (productoMasVendido.desc) { %>
+                    <p class="text-xs text-gray-400 mt-1"><%= productoMasVendido.desc %></p>
+                    <% } %>
+                </div>
             </div>
-            <div>
-                <h3 class="text-lg m-0 mb-1.5 text-text-dark">
-                    <%= productoMasVendido ? productoMasVendido.nombre : 'Aún no hay ventas' %>
-                </h3>
-                <p class="text-[13px] text-text-muted my-0.5">
-                    <%= productoMasVendido ? productoMasVendido.desc : 'Sin pedidos recientes' %>
-                </p>
+            <% } else { %>
+            <div class="flex flex-col items-center justify-center py-8 text-center">
+                <span class="text-4xl mb-2">📦</span>
+                <p class="text-xs text-gray-400">Sin datos esta semana</p>
             </div>
+            <% } %>
+        </div>
+
+        <!-- Card 2: Total ventas del mes -->
+        <div class="bg-white rounded-[14px] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
+            <p class="text-[11px] font-bold text-gray-400 tracking-wide uppercase mb-4">Total de ventas en el mes</p>
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-gray-600 mb-1">Ventas Mensuales</p>
+                    <p class="text-5xl font-extrabold text-gray-800 leading-none"><%= totalMensual %></p>
+                    <p class="text-xs text-gray-400 mt-2">Realizados en total</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0 mt-1">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <rect x="2" y="12" width="4" height="10" rx="1" fill="#a78bfa" opacity="0.5"/>
+                        <rect x="8" y="8" width="4" height="14" rx="1" fill="#a78bfa" opacity="0.7"/>
+                        <rect x="14" y="4" width="4" height="18" rx="1" fill="#7c3aed"/>
+                        <rect x="20" y="9" width="2" height="13" rx="1" fill="#a78bfa" opacity="0.4"/>
+                    </svg>
+                </div>
             </div>
         </div>
 
-        <!-- Donut chart card -->
-        <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)] flex flex-col items-center">
-            <p class="text-[13px] font-bold text-text-muted tracking-wide mb-4 uppercase">CANTIDAD REFERENTE A VENTAS DE
-                LA SEMANA</p>
-            <div class="relative w-[200px] h-[200px] flex items-center justify-center">
-            <svg viewBox="0 0 100 100" class="donut-svg w-full h-full">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#e8e4f0" stroke-width="12" />
-                <!-- stroke-dasharray formula: (percent/100) * 239, 239 -->
-                <% const dash1=Math.round((porcentajeProducto/100) * 239); %>
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#7c5cbf" stroke-width="12"
-                    stroke-dasharray="<%= dash1 %> 239" stroke-dashoffset="0" stroke-linecap="round" />
-            </svg>
-            <div class="absolute text-center">
-                <span class="block text-[32px] font-extrabold text-[#7c5cbf]">
-                    <%= porcentajeProducto %>%
-                </span>
-                <span class="block text-[11px] text-text-muted leading-tight mt-0.5">de productos<br />de la
-                    semana</span>
-            </div>
+        <!-- Card 3: Total ventas semanales -->
+        <div class="bg-white rounded-[14px] p-5 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
+            <p class="text-[11px] font-bold text-gray-400 tracking-wide uppercase mb-4">Total de ventas semanales</p>
+            <p class="text-sm font-semibold text-gray-600 mb-3">Ventas Semanales</p>
+            <div class="flex gap-6">
+                <div>
+                    <p class="text-4xl font-extrabold text-gray-800 leading-none"><%= totalSemanal %></p>
+                    <p class="text-xs text-gray-400 mt-1">Pedidos</p>
+                </div>
+                <div class="w-px bg-gray-200 self-stretch mx-1"></div>
+                <div>
+                    <p class="text-4xl font-extrabold text-gray-800 leading-none"><%= productosSemanal %></p>
+                    <p class="text-xs text-gray-400 mt-1">Productos</p>
+                </div>
             </div>
         </div>
+
+    </div>
+
+    <!-- Line chart card: Total de ventas en el mes -->
+    <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)] mb-6">
+        <p class="text-[13px] font-bold text-gray-400 tracking-wide mb-6 uppercase">Total de ventas en el mes</p>
+
+        <%
+            const vd = typeof ventasDiarias !== 'undefined' ? ventasDiarias : { actual: [], anterior: [], diasEnMes: 30, diasEnMesAnterior: 30 };
+            const diasMes = vd.diasEnMes || 30;
+            const actualArr = vd.actual || [];
+            const anteriorArr = vd.anterior || [];
+            const maxVal = Math.max(1, ...actualArr, ...anteriorArr);
+
+            // Chart dimensions
+            const LC = 60, RC = 890, TC = 40, BC = 310;
+            const LW = RC - LC;
+            const LH = BC - TC;
+
+            // Nice max for Y axis
+            function niceMaxLine(v) {
+                if (v <= 0) return 1;
+                const exp = Math.floor(Math.log10(v));
+                const mag = Math.pow(10, exp);
+                for (const f of [1, 2, 5, 10]) {
+                    if (v <= f * mag) return f * mag;
+                }
+                return 10 * mag;
+            }
+            const yMax = niceMaxLine(maxVal);
+
+            // Generate Y axis ticks (integers)
+            const yStep = Math.max(1, Math.ceil(yMax / 5));
+            const yTicks = [];
+            for (let v = 0; v <= yMax; v += yStep) yTicks.push(v);
+            if (yTicks[yTicks.length - 1] !== yMax) yTicks.push(yMax);
+
+            // Generate points for the line charts
+            function makePoints(arr, days) {
+                const pts = [];
+                for (let i = 0; i < days; i++) {
+                    const x = Math.round(LC + (i / (days - 1 || 1)) * LW);
+                    const val = arr[i] || 0;
+                    const y = Math.round(BC - (val / yMax) * LH);
+                    pts.push({ x, y, val, day: i + 1 });
+                }
+                return pts;
+            }
+
+            const ptsActual = makePoints(actualArr, diasMes);
+            const ptsAnterior = makePoints(anteriorArr, vd.diasEnMesAnterior || diasMes);
+
+            // Build polyline strings
+            const lineActual = ptsActual.map(p => p.x + ',' + p.y).join(' ');
+            const lineAnterior = ptsAnterior.map(p => p.x + ',' + p.y).join(' ');
+
+            // Area fill under actual line
+            const areaActual = LC + ',' + BC + ' ' + lineActual + ' ' + RC + ',' + BC;
+        %>
+
+        <svg viewBox="0 0 960 380" width="100%">
+            <!-- Grid lines -->
+            <% yTicks.forEach(val => {
+                const gy = Math.round(BC - (val / yMax) * LH);
+            %>
+                <line x1="<%= LC %>" y1="<%= gy %>" x2="<%= RC %>" y2="<%= gy %>"
+                      stroke="#f3f4f6" stroke-width="1"/>
+                <text x="<%= LC - 8 %>" y="<%= gy + 4 %>" text-anchor="end"
+                      font-size="10" fill="#9ca3af"><%= val %></text>
+            <% }) %>
+
+            <!-- Axis lines -->
+            <line x1="<%= LC %>" y1="<%= TC %>" x2="<%= LC %>" y2="<%= BC %>" stroke="#e5e7eb" stroke-width="1"/>
+            <line x1="<%= LC %>" y1="<%= BC %>" x2="<%= RC %>" y2="<%= BC %>" stroke="#e5e7eb" stroke-width="1"/>
+
+            <!-- X axis labels (days) -->
+            <% for (let d = 1; d <= diasMes; d++) {
+                const dx = Math.round(LC + ((d - 1) / (diasMes - 1 || 1)) * LW);
+            %>
+                <text x="<%= dx %>" y="<%= BC + 18 %>" text-anchor="middle"
+                      font-size="9" fill="#9ca3af"><%= d %></text>
+            <% } %>
+
+            <!-- Area fill under current month line -->
+            <defs>
+                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
+                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/>
+                </linearGradient>
+            </defs>
+            <polygon points="<%= areaActual %>" fill="url(#areaGrad)"/>
+
+            <!-- Previous month line (pink/red, dashed) -->
+            <% if (ptsAnterior.length > 1) { %>
+            <polyline points="<%= lineAnterior %>"
+                      fill="none" stroke="#f87171" stroke-width="2"
+                      stroke-dasharray="6 4" stroke-opacity="0.6" stroke-linejoin="round"/>
+            <% } %>
+
+            <!-- Current month line (blue) -->
+            <% if (ptsActual.length > 1) { %>
+            <polyline points="<%= lineActual %>"
+                      fill="none" stroke="#3b82f6" stroke-width="2.5"
+                      stroke-linejoin="round" stroke-linecap="round"/>
+            <% } %>
+
+            <!-- Data points for current month -->
+            <% ptsActual.forEach(p => { %>
+                <% if (p.val > 0) { %>
+                <circle cx="<%= p.x %>" cy="<%= p.y %>" r="3" fill="#3b82f6" stroke="#fff" stroke-width="1.5">
+                    <title>Día <%= p.day %>: <%= p.val %> pedidos</title>
+                </circle>
+                <% } %>
+            <% }) %>
+
+            <!-- Data points for previous month -->
+            <% ptsAnterior.forEach(p => { %>
+                <% if (p.val > 0) { %>
+                <circle cx="<%= p.x %>" cy="<%= p.y %>" r="2.5" fill="#f87171" stroke="#fff" stroke-width="1">
+                    <title>Mes anterior, día <%= p.day %>: <%= p.val %> pedidos</title>
+                </circle>
+                <% } %>
+            <% }) %>
+
+            <!-- Legend -->
+            <rect x="<%= LC %>" y="<%= BC + 35 %>" width="14" height="4" rx="2" fill="#3b82f6"/>
+            <text x="<%= LC + 20 %>" y="<%= BC + 40 %>" font-size="11" fill="#374151">Mes Actual</text>
+            <rect x="<%= LC + 120 %>" y="<%= BC + 35 %>" width="14" height="4" rx="2" fill="#f87171" opacity="0.6"/>
+            <text x="<%= LC + 140 %>" y="<%= BC + 40 %>" font-size="11" fill="#374151">Mes Anterior</text>
+
+            <!-- Hover trigger zones -->
+            <% ptsActual.forEach((p, i) => { 
+                const w = LW / (diasMes - 1 || 1);
+                const yAnt = ptsAnterior[i] ? ptsAnterior[i].y : BC;
+            %>
+                <rect x="<%= p.x - w/2 %>" y="<%= TC %>" width="<%= w %>" height="<%= BC - TC %>"
+                      fill="transparent" class="hover-trigger"
+                      data-day="<%= p.day %>"
+                      data-actual="<%= p.val %>"
+                      data-anterior="<%= anteriorArr[i] || 0 %>"
+                      data-x="<%= p.x %>"
+                      data-y-act="<%= p.y %>"
+                      data-y-ant="<%= yAnt %>"
+                />
+            <% }) %>
+
+            <!-- Vertical indicator line and highlight dots -->
+            <line id="hover-line" x1="0" y1="<%= TC %>" x2="0" y2="<%= BC %>" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 4" style="display:none;" />
+            <circle id="hover-dot-act" r="5" fill="#3b82f6" stroke="#fff" stroke-width="2" style="display:none;" />
+            <circle id="hover-dot-ant" r="4" fill="#f87171" stroke="#fff" stroke-width="1.5" style="display:none;" />
+        </svg>
+    </div>
+
+    <!-- Tooltip Element -->
+    <div id="chart-tooltip" class="chart-tooltip"></div>
+
+    <!-- Weekly branches table -->
+    <div class="bg-white rounded-[14px] shadow-[0_4px_16px_rgba(0,0,0,0.07)] overflow-hidden">
+        <div class="px-6 pt-5 pb-3 border-b border-gray-100">
+            <p class="text-[13px] font-bold text-gray-400 tracking-wide uppercase">Sucursales con más pedidos en la semana</p>
         </div>
-
-        <!-- MIDDLE ROW: Monthly + Weekly -->
-        <div class="grid grid-cols-2 gap-6 mb-6 max-[900px]:grid-cols-1">
-
-        <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
-            <p class="text-[13px] font-bold text-text-muted tracking-wide mb-4 uppercase">TOTAL DE VENTAS EN EL MES</p>
-            <p class="text-sm text-text-muted my-1.5">Se realizaron un total de:</p>
-            <p class="text-base font-bold text-ppg-blue my-1 mb-3">
-                <%= totalMensual %> Pedidos entre todas las sucursales
-            </p>
-            </div>
-
-        <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
-            <p class="text-[13px] font-bold text-text-muted tracking-wide mb-4 uppercase">TOTAL DE VENTAS SEMANALES</p>
-            <p class="text-sm text-text-muted my-1.5">Se realizaron un total de:</p>
-            <p class="text-base font-bold text-ppg-blue my-1 mb-3">
-                <%= totalSemanal %> Pedidos entre todas las sucursales
-            </p>
-            <p class="text-sm text-text-muted my-1.5">Se ordenaron:</p>
-            <p class="text-base font-bold text-ppg-blue my-1 mb-3">
-                <%= productosSemanal %> Productos entre todas las sucursales
-            </p>
+        <% if (!topSucursalesChart || topSucursalesChart.length === 0) { %>
+        <div class="flex flex-col items-center justify-center py-14 text-center">
+            <span class="text-4xl mb-3">🏪</span>
+            <p class="text-gray-400 text-sm">Sin datos de sucursales disponibles.</p>
         </div>
-        </div>
-
-        <!-- BOTTOM ROW: Branches + Donut -->
-        <div class="grid grid-cols-[2fr_1fr] gap-6 mb-6 max-[900px]:grid-cols-1">
-
-        <!-- Branches table -->
-        <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)]">
-            <p class="text-[13px] font-bold text-text-muted tracking-wide mb-4 uppercase">SUCURSALES CON MÁS PEDIDOS EN
-                LA SEMANA</p>
-            <table class="w-full border-collapse">
-            <tbody>
-                <% if (topSucursales && topSucursales.length> 0) { %>
-                <% topSucursales.forEach((sucursal, index)=> { %>
-                    <tr class="border-b border-[#f0f0f0]">
-                    <td class="py-3 px-2 align-middle text-sm font-semibold text-text-dark">
-                        <%= sucursal.nombre %>
-                    </td>
-                    <td class="py-3 px-2 align-middle">
-                        <span
-                        class="inline-block text-xs font-semibold py-1.5 px-3 rounded-full <%= index === 0 ? 'bg-ppg-blue/[0.12] text-ppg-blue' : 'bg-[#7c5cbf]/[0.12] text-[#7c5cbf]' %>">
-                        <%= sucursal.cantidad %> Pedidos en la última semana
+        <% } else { %>
+        <table class="w-full">
+            <thead>
+                <tr class="text-left">
+                    <th class="px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Sucursal</th>
+                    <th class="px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Gerente</th>
+                    <th class="px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Pedidos Semanales</th>
+                    <th class="px-6 py-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Ingresos Semanales</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                <% topSucursalesChart.forEach(s => { %>
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 text-sm font-semibold text-gray-800"><%= s.nombre_sucursal %></td>
+                    <td class="px-6 py-4 text-sm text-gray-500"><%= s.nombre_cuenta %></td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center justify-center min-w-[2rem] px-2.5 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-700">
+                            <%= s.total_ordenes %>
                         </span>
                     </td>
-                    </tr>
-                    <% }); %>
-                        <% } else { %>
-                        <tr>
-                            <td class="py-3 px-2 text-sm text-text-muted">Aún no hay pedidos registrados esta semana.</td>
-                        </tr>
-                        <% } %>
-                </tbody>
-            </table>
-        </div>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-emerald-50 text-emerald-700">
+                            <%
+                                const v = s.total_ventas;
+                                let fmt;
+                                if (v >= 1000000) fmt = '$' + (v/1000000).toFixed(1) + 'M';
+                                else if (v >= 1000) fmt = '$' + Math.round(v/1000) + 'K';
+                                else fmt = '$' + Math.round(v);
+                            %>
+                            <%= fmt %>
+                        </span>
+                    </td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <% } %>
+    </div>
 
-        <!-- Mini donut -->
-        <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)] flex flex-col items-center">
-            <div class="relative w-[160px] h-[160px] flex items-center justify-center">
-                <svg viewBox="0 0 100 100" class="donut-svg w-[160px] h-[160px]">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#e8e4f0" stroke-width="12" />
-                <!-- stroke-dasharray formula: (percent/100) * 239, 239 -->
-                <% const dash2=Math.round((porcentajeSucursales/100) * 239); %>
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#7c5cbf" stroke-width="12"
-                    stroke-dasharray="<%= dash2 %> 239" stroke-dashoffset="0" stroke-linecap="round" />
-            </svg>
-            <div class="absolute text-center">
-                <span class="block text-[26px] font-extrabold text-[#7c5cbf]">
-                <%= porcentajeSucursales %>%
-                </span>
-                <span class="block text-[10px] text-text-muted leading-tight mt-0.5">Representado por las<br />top
-                sucursales<br />en la semana</span>
-            </div>
-            </div>
-        </div>
-
-        </div>
 </main>
 
 <%- include('partials/footer.ejs') %>
@@ -177,8 +348,68 @@
             tab.classList.remove('text-gray-500');
         }
     });
+
+    // Tooltip Logic
+    const tooltip = document.getElementById('chart-tooltip');
+    const hoverLine = document.getElementById('hover-line');
+    const dotAct = document.getElementById('hover-dot-act');
+    const dotAnt = document.getElementById('hover-dot-ant');
+    const triggers = document.querySelectorAll('.hover-trigger');
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener('mouseenter', (e) => {
+            const { day, actual, anterior, x, yAct, yAnt } = trigger.dataset;
+
+            tooltip.innerHTML = `
+                <div class="tooltip-header">${day}</div>
+                <div class="tooltip-row">
+                    <div class="tooltip-dot bg-blue-500"></div>
+                    <span>Periodo Actual: <b>${actual}</b></span>
+                </div>
+                <div class="tooltip-row">
+                    <div class="tooltip-dot bg-red-400 opacity-60"></div>
+                    <span>Periodo Anterior: <b>${anterior}</b></span>
+                </div>
+            `;
+            tooltip.style.display = 'block';
+            
+            // Show guide line and dots
+            hoverLine.setAttribute('x1', x);
+            hoverLine.setAttribute('x2', x);
+            hoverLine.style.display = 'block';
+
+            dotAct.setAttribute('cx', x);
+            dotAct.setAttribute('cy', yAct);
+            dotAct.style.display = 'block';
+
+            dotAnt.setAttribute('cx', x);
+            dotAnt.setAttribute('cy', yAnt);
+            dotAnt.style.display = 'block';
+        });
+
+        trigger.addEventListener('mousemove', (e) => {
+            // Position tooltip
+            const offset = 15;
+            let left = e.pageX + offset;
+            let top = e.pageY - 40;
+
+            // Simple collision detection for right edge
+            if (left + 160 > window.innerWidth) {
+                left = e.pageX - 160 - offset;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        });
+
+        trigger.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+            hoverLine.style.display = 'none';
+            dotAct.style.display = 'none';
+            dotAnt.style.display = 'none';
+        });
+    });
 </script>
 
 </body>
-
 </html>

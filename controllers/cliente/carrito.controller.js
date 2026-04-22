@@ -3,6 +3,7 @@ const detalle_ordenModel = require('../../models/detalle_orden.model');
 const productoModel = require('../../models/producto.model')
 const { compile } = require('ejs');
 const { log } = require('../../utils/logger');
+const cartcount = require('../../utils/cartcount');
 
 exports.getCarrito = async (request, response, next) => {
     try {
@@ -29,6 +30,16 @@ exports.getCarrito = async (request, response, next) => {
             );
         }
 
+        // Productos sugeridos: todos los activos, excluir los del carrito, tomar 4 al azar
+        const idsEnCarrito = new Set((productosCarrito || []).map(i => i.id_producto));
+        const todosLosProductos = await productoModel.fetchAll();
+        const disponibles = todosLosProductos.filter(p => !idsEnCarrito.has(p.id_producto));
+        for (let i = disponibles.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [disponibles[i], disponibles[j]] = [disponibles[j], disponibles[i]];
+        }
+        const productosSugeridos = disponibles.slice(0, 4);
+
         response.render('cliente/cart', {
             csrfToken: request.csrfToken(),
             usuario: request.session.usuario,
@@ -37,6 +48,7 @@ exports.getCarrito = async (request, response, next) => {
             detalleProductos: detalleProductos,
             sucursal_activa: sucursal_activa,
             carrito: request.session.id_carrito,
+            productosSugeridos,
         });
 
     } catch (err) {
@@ -66,7 +78,15 @@ exports.agregarItem = async (request, response, next) => {
             request.body.cantidad_ingresada
         );
 
-        response.redirect('/cliente/home?info=' + encodeURIComponent("Se agrego el producto al carrito"))
+
+        const page = request.body.page || '1';  
+        const search = request.body.search || '';
+        
+        if (search) {
+            response.redirect(`/cliente/home?search=${encodeURIComponent(search)}`);
+        } else {
+            response.redirect(`/cliente/home?page=${page}`);
+        }
 
     } catch (err) {
         response.redirect(`/cliente/product/${request.body.id_producto}?error=` + encodeURIComponent("No se pudo agregar el producto al carrito"));
@@ -111,9 +131,13 @@ exports.actualizarItem = async (request, response, next) => {
                 cantidad_ingresada
             );
 
+            const items = await detalle_ordenModel.detalleOrden(request.session.id_carrito);
+            const nuevoTotal = items.reduce((sum, i) => sum + i.cantidad, 0);
+
             return response.json({
                 eliminado: false,
                 nuevaCantidad: cantidad_ingresada,
+                cartCount: nuevoTotal,
                 csrfToken: request.csrfToken()
             });
         }
