@@ -148,6 +148,28 @@
   
 </div>
 
+<!-- Productos sugeridos -->
+<% if (productosSugeridos && productosSugeridos.length > 0) { %>
+<div class="max-w-7xl mx-auto px-6 pb-12">
+    <h2 class="text-2xl font-black text-gray-900 mb-6">Productos similares</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
+        <% productosSugeridos.forEach(function(p) { %>
+        <a href="/cliente/product/<%= p.id_producto %>"
+           class="bg-white rounded-2xl shadow-sm p-5 flex flex-col items-center hover:shadow-md transition-shadow">
+            <div class="w-full h-36 flex items-center justify-center overflow-hidden mb-3">
+                <img src="/uploads/<%= p.url_imagen || '/img/botePintura.png' %>"
+                     alt="<%= p.nombre %>"
+                     onerror="this.src='/img/botePintura.png'"
+                     class="object-contain h-full w-full">
+            </div>
+            <p class="text-sm font-semibold text-gray-800 text-center leading-snug mb-2 line-clamp-2"><%= p.nombre %></p>
+            <p class="text-base font-black text-gray-900">$ <%= Number(p.precio_unitario).toLocaleString('es-MX') %></p>
+        </a>
+        <% }); %>
+    </div>
+</div>
+<% } %>
+
 <meta name="csrf-token" content="<%= csrfToken %>">
 <script src="/JavaScript/carrito.js"></script>
 

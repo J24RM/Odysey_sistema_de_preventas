@@ -30,6 +30,16 @@ exports.getCarrito = async (request, response, next) => {
             );
         }
 
+        // Productos sugeridos: todos los activos, excluir los del carrito, tomar 4 al azar
+        const idsEnCarrito = new Set((productosCarrito || []).map(i => i.id_producto));
+        const todosLosProductos = await productoModel.fetchAll();
+        const disponibles = todosLosProductos.filter(p => !idsEnCarrito.has(p.id_producto));
+        for (let i = disponibles.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [disponibles[i], disponibles[j]] = [disponibles[j], disponibles[i]];
+        }
+        const productosSugeridos = disponibles.slice(0, 4);
+
         response.render('cliente/cart', {
             csrfToken: request.csrfToken(),
             usuario: request.session.usuario,
@@ -38,6 +48,7 @@ exports.getCarrito = async (request, response, next) => {
             detalleProductos: detalleProductos,
             sucursal_activa: sucursal_activa,
             carrito: request.session.id_carrito,
+            productosSugeridos,
         });
 
     } catch (err) {
