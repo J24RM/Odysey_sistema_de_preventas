@@ -82,7 +82,7 @@ module.exports = class Orden {
     static async obtenerDetalleOrden(id_orden) {
         const { data: detalles, error } = await supabase
             .from('detalle_orden')
-            .select('cantidad, id_producto, producto(nombre, precio_unitario, url_imagen, clave)')
+            .select('cantidad, id_producto, producto(nombre, precio_unitario, url_imagen, clave, peso)')
             .eq('id_orden', id_orden);
 
         if (error) throw error;

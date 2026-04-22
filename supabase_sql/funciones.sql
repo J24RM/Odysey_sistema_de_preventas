@@ -127,6 +127,7 @@ returns json as $$
 declare
     v_orden_id int;
     v_subtotal numeric := 0;
+    v_peso_total numeric := 0;
     v_folio text;
     v_sucursal int;
     v_productos json;
@@ -135,7 +136,7 @@ begin
     into v_orden_id, v_sucursal
     from orden
     where id_usuario = p_id_usuario
-      and estado = 'carrito'
+    and estado = 'carrito'
     limit 1;
 
     if v_orden_id is null then
@@ -147,7 +148,8 @@ begin
         'nombre', p.nombre,
         'cantidad', d.cantidad,
         'precio', p.precio_unitario,
-        'total', (p.precio_unitario * d.cantidad)
+        'total', (p.precio_unitario * d.cantidad),
+        'peso', p.peso
     ))
     into v_productos
     from detalle_orden d
@@ -158,8 +160,11 @@ begin
         raise exception 'Carrito vacío';
     end if;
 
-    select sum(p.precio_unitario * d.cantidad)
-    into v_subtotal
+    -- Calcular subtotal y peso total
+    select 
+        sum(p.precio_unitario * d.cantidad),
+        sum(p.peso * d.cantidad)
+    into v_subtotal, v_peso_total
     from detalle_orden d
     join producto p on p.id_producto = d.id_producto
     where d.id_orden = v_orden_id;
@@ -171,6 +176,7 @@ begin
     update orden
     set estado = 'confirmada',
         subtotal = v_subtotal,
+        peso_total = v_peso_total,
         folio = v_folio,
         fecha_realizada = now() AT TIME ZONE 'America/Mexico_City'
     where id_orden = v_orden_id;
@@ -178,9 +184,9 @@ begin
     return json_build_object(
         'folio', v_folio,
         'subtotal', v_subtotal,
+        'peso_total', v_peso_total,
         'productos', v_productos
     );
-
 end;
 language plpgsql
 

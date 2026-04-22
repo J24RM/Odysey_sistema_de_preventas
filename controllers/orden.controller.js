@@ -9,6 +9,8 @@ const path = require('path');
 const fs = require('fs');
 const { log } = require('../utils/logger');
 const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 exports.getOrdenes = async (req, res) => {
 
@@ -26,42 +28,89 @@ exports.registrarOrden = async (req, res) => {
         if (id_sucursal && orden?.folio) {
             await ordenModel.actualizarSucursalPorFolio(orden.folio, id_sucursal);
         }
-        const { folio, subtotal, productos } = orden;
+        const { folio, subtotal, productos, peso_total } = orden;
 
         let detalleHTML = "";
         productos.forEach(p => {
+            const subtotalFila = parseFloat(p.total);
+            const totalFila = subtotalFila * 1.16;
+
             detalleHTML += `
                 <tr>
-                    <td>${p.nombre}</td>
-                    <td>${p.cantidad}</td>
-                    <td>$${parseFloat(p.precio).toFixed(2)}</td>
-                    <td>$${parseFloat(p.total).toFixed(2)}</td>
+                    <td style="padding:8px; border:1px solid #929292;">${p.nombre}</td>
+                    <td style="padding:8px; border:1px solid #929292;">${p.cantidad}</td>
+                    <td style="padding:8px; border:1px solid #929292;">${p.peso} Kg</td>
+                    <td style="padding:8px; border:1px solid #929292;">$${parseFloat(p.precio).toFixed(2)}</td>
+                    <td style="padding:8px; border:1px solid #929292;">$${subtotalFila.toFixed(2)}</td>
+                    <td style="padding:8px; border:1px solid #929292;">$${totalFila.toFixed(2)}</td>
                 </tr>
             `;
         });
 
-        const resend = new Resend(process.env.RESEND_API_KEY);
+        const total = subtotal * 1.16;
+
+        let sucursalNombre = req.session.sucursal_activa.nombre_sucursal || "";
 
         resend.emails.send({
-            from: 'onboarding@resend.dev', 
+            from: 'onboarding@resend.dev',
             to: correo,
             subject: `Confirmación de Orden ${folio}`,
             html: `
-                <h2>Orden Confirmada</h2>
-                <p><strong>Folio:</strong> ${folio}</p>
-                <table border="1">
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio</th>
-                        <th>Total</th>
-                    </tr>
-                    ${detalleHTML}
-                </table>
-                <h3>Subtotal: $${parseFloat(subtotal).toFixed(2)}</h3>
+            <div style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
+                <div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:10px;">
+                    
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                        <h2 style="color:#333; margin:0;">Orden Confirmada</h2>
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/PPG_Logo.svg/1280px-PPG_Logo.svg.png" 
+                            alt="PPG Logo" style="width:120px;">
+                    </div>
+
+                    <p>Tu orden ha sido registrada con éxito.</p>
+                    <p><strong>Folio:</strong> ${folio}</p>
+                    <p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Sucursal:</strong> ${sucursalNombre}</p>
+                    <h3>Detalle de la orden:</h3>
+                    <table style="width:100%; border-collapse:collapse; border:1px solid #002736;">
+                        <thead>
+                            <tr style="background:#002736;">
+                                <th style="padding:8px; color:white; border:1px solid #ddd;">Producto</th>
+                                <th style="padding:8px; color:white; border:1px solid #ddd;">Cantidad</th>
+                                <th style="padding:8px; color:white; border:1px solid #ddd;">Peso</th>
+                                <th style="padding:8px; color:white; border:1px solid #ddd;">Precio</th>
+                                <th style="padding:8px; color:white; border:1px solid #ddd;">Subtotal</th>
+                                <th style="padding:8px; color:white; border:1px solid #ddd;">Total(IVA incluido)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${detalleHTML}
+                        </tbody>
+                    </table>
+
+                    <table style="width:100%; margin-top:15px; border-collapse:collapse;">
+                        <tr>
+                            <td style="padding:6px; text-align:right;"><strong>Peso Total:</strong></td>
+                            <td style="padding:6px; text-align:right; width:150px;">${peso_total.toFixed(2)} Kg</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px; text-align:right;"><strong>Subtotal:</strong></td>
+                            <td style="padding:6px; text-align:right; width:150px;">$${subtotal.toFixed(2)}</td>
+                        </tr>
+                        <tr style="background:#002736; color:white;">
+                            <td style="padding:8px; text-align:right;"><strong>Total(IVA incluido):</strong></td>
+                            <td style="padding:8px; text-align:right; width:150px; white-space:nowrap;"><strong>$${total.toFixed(2)} </strong></td>
+                        </tr>
+                    </table>
+
+                    <div style="text-align:center; margin-top:20px;">
+                        <a href="http://localhost:3000/"
+                        style="background:#002736; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">
+                        Ver mis pedidos
+                        </a>
+                    </div>
+                </div>
+            </div>
             `
-        })
-        .catch(err => {
+        }).catch(err => {
             console.error("Error correo:", err);
         });
 
@@ -144,6 +193,9 @@ exports.getDetalleOrden = async (req, res) => {
         }
 
         const detalles = await ordenModel.obtenerDetalleOrden(req.params.id_orden);
+        console.log(detalles)
+
+        
         res.json({ orden, detalles });
     } catch (error) {
         console.error('Error al obtener detalle:', error);

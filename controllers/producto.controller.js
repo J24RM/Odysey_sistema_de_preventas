@@ -190,7 +190,7 @@ exports.getProductoCliente = async (request, response) => {
             id: productoRaw.id_producto,
             nombre: productoRaw.nombre,
             precio: productoRaw.precio_unitario,
-            peso: productoRaw.peso || 'N/A',
+            peso: productoRaw.peso || 0,
             volumen: productoRaw.volumen || 'N/A',
             unidadVenta: productoRaw.unidad_venta || 'N/A',
             unidadMedida: productoRaw.unidad_medida || 'N/A',
