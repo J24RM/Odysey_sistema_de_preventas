@@ -61,6 +61,15 @@ if (scrollY !== null) {
     });
 }
 
+function changeCantidad(index, delta) {
+    const visible = document.getElementById('cantidad-visible-' + index);
+    const hidden = document.getElementById('cantidad-input-' + index);
+    let val = parseInt(visible.value) || 1;
+    val = Math.max(1, val + delta);
+    visible.value = val;
+    hidden.value = val;
+}
+
 function mostrarInfo(mensaje) {
     const contenedor = document.getElementById('success-container');
     contenedor.textContent = mensaje;
