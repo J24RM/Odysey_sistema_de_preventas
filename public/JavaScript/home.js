@@ -35,7 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (params.get('info')) {
         mostrarInfo(decodeURIComponent(params.get('info')));
         window.history.replaceState({}, '', '/cliente/home');
-        
+    }
+
+    // Limpiar el buscador si no hay query en la URL (ej: al volver de un detalle)
+    const searchInput = document.getElementById('clienteSearchInput');
+    if (searchInput && !params.get('search')) {
+        searchInput.value = '';
     }
 
 document.querySelectorAll('form[action="/cart/items"]').forEach(form => {
