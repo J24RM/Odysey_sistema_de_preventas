@@ -82,8 +82,7 @@ function renderSucursalSelector(cuenta_activa, sucursales, sucursal_activa) {
         `<option value="${s.id_sucursal}" ${sucursal_activa && sucursal_activa.id_sucursal === s.id_sucursal ? 'selected' : ''}>${s.nombre_sucursal}</option>`
     ).join('');
     return `
-    <div class="mt-4 mb-3">
-        <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Cambiar sucursal</label>
+    <div class="my-3">
         <select id="selectSucursal" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0078A9] bg-white">
             <option value="">— Seleccionar sucursal —</option>
             ${opts}
@@ -163,8 +162,8 @@ function buildModalContent(data, opts = {}) {
     <!-- Sucursal -->
     <div class="py-4 border-b border-gray-100">
         <h3 class="text-[11px] font-semibold text-gray-600 uppercase tracking-wider mb-3">Sucursal</h3>
-        <div id="sucursalInfo">${renderSucursalInfo(sucursal_activa)}</div>
         <div id="sucursalSelectorContainer">${renderSucursalSelector(cuenta_activa, sucursales, sucursal_activa)}</div>
+        <div id="sucursalInfo">${renderSucursalInfo(sucursal_activa)}</div>
     </div>
 
     <!-- Footer -->
