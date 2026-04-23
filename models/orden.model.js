@@ -82,17 +82,17 @@ module.exports = class Orden {
     static async obtenerDetalleOrden(id_orden) {
         const { data: detalles, error } = await supabase
             .from('detalle_orden')
-            .select('cantidad, id_producto, producto(nombre, precio_unitario, url_imagen, clave)')
+            .select('cantidad, id_producto, producto(nombre, precio_unitario, url_imagen, clave, peso)')
             .eq('id_orden', id_orden);
 
         if (error) throw error;
         return detalles || [];
     }
 
-    static async actualizarSucursalPorFolio(folio, id_sucursal) {
+    static async actualizarSucursalYCuentaPorFolio(folio, id_sucursal, id_cuenta) {
         const { error } = await supabase
             .from('orden')
-            .update({ id_sucursal })
+            .update({ id_sucursal , id_cuenta})
             .eq('folio', folio);
         if (error) throw error;
     }

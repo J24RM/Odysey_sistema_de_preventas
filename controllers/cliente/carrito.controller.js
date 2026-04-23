@@ -1,6 +1,7 @@
 const ordenModel = require('../../models/orden.model')
 const detalle_ordenModel = require('../../models/detalle_orden.model');
 const productoModel = require('../../models/producto.model')
+const configuracionModel = require('../../models/configuracion.model')
 const { compile } = require('ejs');
 const { log } = require('../../utils/logger');
 const cartcount = require('../../utils/cartcount');
@@ -40,6 +41,10 @@ exports.getCarrito = async (request, response, next) => {
         }
         const productosSugeridos = disponibles.slice(0, 4);
 
+        // Obtener tiempo de cancelacion
+        const configuracion = await configuracionModel.ObtenerConfiguracionActiva();
+        console.log(configuracion);
+
         response.render('cliente/cart', {
             csrfToken: request.csrfToken(),
             usuario: request.session.usuario,
@@ -49,6 +54,7 @@ exports.getCarrito = async (request, response, next) => {
             sucursal_activa: sucursal_activa,
             carrito: request.session.id_carrito,
             productosSugeridos,
+            tiempoCancelacion: configuracion.tiempo_de_cancelacion,
         });
 
     } catch (err) {
@@ -59,24 +65,14 @@ exports.getCarrito = async (request, response, next) => {
 exports.agregarItem = async (request, response, next) => {
     try {
 
-        // Obtener carrito
-        const carrito = await ordenModel.obtenerOrdenEnEstadoCarrito(request.session.usuario);
-        if(!carrito){
-            const carrito = await ordenModel.crearCarrito(request.session.usuario);
-            request.session.id_carrito = carrito.id_orden;
-        }
-
-        else{
-            request.session.id_carrito = carrito.id_orden;
-        }
-
-
         // Agregar producto
-        await detalle_ordenModel.agregarProductoAlCarrito(
-            request.session.id_carrito,
+        const data = await detalle_ordenModel.agregarProductoAlCarrito(
+            request.session.usuario,
             request.body.id_producto,
             request.body.cantidad_ingresada
         );
+
+        request.session.id_carrito = data;
 
 
         const page = request.body.page || '1';  
@@ -89,26 +85,6 @@ exports.agregarItem = async (request, response, next) => {
         }
 
     } catch (err) {
-        response.redirect(`/cliente/product/${request.body.id_producto}?error=` + encodeURIComponent("No se pudo agregar el producto al carrito"));
-    }
-};
-
-exports.agregarItem = async (request, response) => {
-    try {
-
-        const data = await detalle_ordenModel.agregarProductoAlCarrito(
-            request.session.usuario,
-            request.body.id_producto,
-            request.body.cantidad_ingresada
-        );
-
-
-        request.session.id_carrito = data;
-
-        response.redirect('/cliente/home?info=' + encodeURIComponent("Se agrego el producto al carrito"));
-
-    } catch (error) {
-        console.log(error)
         response.redirect(`/cliente/product/${request.body.id_producto}?error=` + encodeURIComponent("No se pudo agregar el producto al carrito"));
     }
 };
