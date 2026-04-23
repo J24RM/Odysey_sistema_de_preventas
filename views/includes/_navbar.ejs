@@ -24,15 +24,15 @@
         <img src="/img/ppg-logo.svg" class="w-[60px]" alt="PPG">
     </a>
 
-    <!-- Sucursal activa (solo display, no es botón) -->
+    <!-- Sucursal activa (abre modal de perfil) -->
     <div class="ml-6 flex-shrink-0">
-        <div id="sucursal-display" class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm shadow-sm">
+        <button onclick="window.abrirModalPerfil()" id="sucursal-display" class="bg-white border border-gray-300 rounded-md px-4 py-2 text-sm shadow-sm hover:border-[#0078A9] hover:shadow-md transition-all cursor-pointer">
             <% if (locals.sucursal_activa) { %>
                 <span class="font-semibold text-gray-800"><%= sucursal_activa.nombre_sucursal %></span>
             <% } else { %>
                 <span class="text-gray-400 italic">Sin sucursal</span>
             <% } %>
-        </div>
+        </button>
     </div>
 
     <!-- Buscador centrado -->
