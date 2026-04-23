@@ -49,13 +49,29 @@ module.exports = class Orden {
     static async obtenerOrdenesPorUsuario(id_usuario) {
         const { data: ordenes, error } = await supabase
             .from('orden')
-            .select('*')
+            .select('*, sucursal(nombre_sucursal)')
             .eq('id_usuario', id_usuario)
             .neq('estado', 'carrito')
             .order('fecha_realizada', { ascending: false });
 
         if (error) throw error;
         return ordenes || [];
+    }
+
+    static async obtenerOrdenesPorUsuarioPaginado(id_usuario, page = 1, perPage = 20) {
+        const from = (page - 1) * perPage;
+        const to = from + perPage - 1;
+
+        const { data: ordenes, error, count } = await supabase
+            .from('orden')
+            .select('*, sucursal(nombre_sucursal)', { count: 'exact' })
+            .eq('id_usuario', id_usuario)
+            .neq('estado', 'carrito')
+            .order('fecha_realizada', { ascending: false, nullsFirst: false })
+            .range(from, to);
+
+        if (error) throw error;
+        return { ordenes: ordenes || [], total: count || 0 };
     }
 
     static async CancelarOrden(id_orden) {
