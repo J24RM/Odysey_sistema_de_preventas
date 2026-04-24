@@ -15,9 +15,6 @@
     --input-border:   #c8d6e5;
     --text-dark:      #1a1a2e;
     --error:          #e74c3c;
-    /* Sobreescritas por EJS con el color del tema */
-    --tema-color:     #1e2a3a;
-    --tema-rgb:       30,42,58;
     --banner-login-url: url('/img/fondoLogin.jpg');
 }
 
@@ -30,7 +27,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    background: var(--tema-color, var(--navy));
+    background: var(--navy);
 }
 
 /* Columna izquierda   */
@@ -43,7 +40,7 @@ body::before {
     height: 100%;
     border-right: 10px solid #fff;
     background-image:
-        linear-gradient(rgba(var(--tema-rgb, 30,42,58), 0.35), rgba(var(--tema-rgb, 30,42,58), 0.35)),
+        linear-gradient(rgba(255,255,255,0.60), rgba(255,255,255,0.60)),
         var(--banner-login-url, url('/img/fondoLogin.jpg'));
     background-repeat: no-repeat;
     background-size: cover;

@@ -20,11 +20,10 @@
         <main class="ml-48 pt-4 px-10 pb-9 flex-1">
 
             <!-- Banner de campaña -->
-            <% const bannerColor = (config && config.color_tema) ? config.color_tema : '#002736'; %>
-            <% const timerImgSrc = (config && config.banner_timer_url) ? '/uploads/' + config.banner_timer_url : '/img/niñoMundial.png'; %>
-            <% const nombreCamp = (config && config.nombre_campania) ? config.nombre_campania : 'Mundial 2026'; %>
-            <% const fechaFin = (config && config.fecha_fin_campania) ? config.fecha_fin_campania : '2026-06-11T00:00:00'; %>
-            <section class="mb-6 overflow-hidden" style="background:<%= bannerColor %>; padding:28px 40px;">
+            <% const timerImgSrc = (config && config.banner_general_url) ? '/uploads/' + config.banner_general_url : '/img/niñoMundial.png'; %>
+            <% const nombreCamp = (config && config.nombre) ? config.nombre : 'Mundial 2026'; %>
+            <% const fechaFin = (config && config.fecha_de_fin) ? config.fecha_de_fin : '2026-06-11T00:00:00'; %>
+            <section class="mb-6 overflow-hidden" style="background:#002736; padding:28px 40px;">
                 <div class="flex items-center justify-between gap-6">
                     <!-- Left -->
                     <div class="flex-1">
@@ -142,7 +141,7 @@
 
     <script>
         // Temporizador de preventa
-        const target = new Date('<%= (config && config.fecha_fin_campania) ? config.fecha_fin_campania : "2026-06-11T00:00:00" %>');
+        const target = new Date('<%= (config && config.fecha_de_fin) ? config.fecha_de_fin : "2026-06-11T00:00:00" %>');
         function updateCountdown() {
             const diff = target - new Date();
             if (diff <= 0) {

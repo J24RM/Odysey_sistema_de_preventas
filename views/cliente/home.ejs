@@ -6,8 +6,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/style_cliente_home.css">
     <title>Cliente Home</title>
-    <% const temaColor = (config && config.color_tema) ? config.color_tema : '#002736'; %>
-    <style>:root { --color-tema: <%= temaColor %>; }</style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
 <%- include('../includes/_navbar') %>
@@ -22,10 +20,10 @@
     </div> 
 
 
-    <% const campActiva = config && config.campania_activa; %>
-    <% const timerImgSrc = (config && config.banner_timer_url) ? '/uploads/' + config.banner_timer_url : '/img/niñoMundial.png'; %>
-    <% const nombreCamp = (config && config.nombre_campania) ? config.nombre_campania : 'Mundial 2026'; %>
-    <% const fechaFinIso = (config && config.fecha_fin_campania) ? new Date(config.fecha_fin_campania).toISOString() : '2026-06-11T00:00:00.000Z'; %>
+    <% const campActiva = config && config.activo; %>
+    <% const timerImgSrc = (config && config.banner_general_url) ? '/uploads/' + config.banner_general_url : '/img/niñoMundial.png'; %>
+    <% const nombreCamp = (config && config.nombre) ? config.nombre : 'Mundial 2026'; %>
+    <% const fechaFinIso = (config && config.fecha_de_fin) ? new Date(config.fecha_de_fin).toISOString() : '2026-06-11T00:00:00.000Z'; %>
     <% if (campActiva) { %>
     <section class="banner">
         <!-- Izquierda -->

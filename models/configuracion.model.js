@@ -2,48 +2,53 @@ const supabase = require('../utils/supabase');
 
 module.exports = class Configuracion {
 
+    // Obtiene la campaña activa (para vistas públicas/cliente)
     static async ObtenerConfiguracionActiva() {
         const { data, error } = await supabase
-            .from('configuraciones')
+            .from('campania')
             .select('*')
             .eq('activo', true)
-            .single();
-        if (error) throw error;
-        return data;
-    }
-
-    // Obtiene la primera fila de configuración (para el panel admin)
-    static async ObtenerConfig() {
-        const { data, error } = await supabase
-            .from('configuraciones')
-            .select('*')
+            .order('id_campania', { ascending: false })
             .limit(1)
             .maybeSingle();
         if (error) throw error;
         return data;
     }
 
-    // Actualiza (o inserta) la configuración
+    // Obtiene la campaña más reciente (para el panel admin)
+    static async ObtenerConfig() {
+        const { data, error } = await supabase
+            .from('campania')
+            .select('*')
+            .order('id_campania', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (error) throw error;
+        return data;
+    }
+
+    // Actualiza la campaña más reciente (o inserta una si no existe)
     static async GuardarConfig(campos) {
         const { data: existing } = await supabase
-            .from('configuraciones')
-            .select('id_configuraciones')
+            .from('campania')
+            .select('id_campania')
+            .order('id_campania', { ascending: false })
             .limit(1)
             .maybeSingle();
 
         if (existing) {
             const { data, error } = await supabase
-                .from('configuraciones')
+                .from('campania')
                 .update(campos)
-                .eq('id_configuraciones', existing.id_configuraciones)
+                .eq('id_campania', existing.id_campania)
                 .select()
                 .single();
             if (error) throw error;
             return data;
         } else {
             const { data, error } = await supabase
-                .from('configuraciones')
-                .insert({ ...campos, activo: true })
+                .from('campania')
+                .insert({ ...campos, activo: false })
                 .select()
                 .single();
             if (error) throw error;
