@@ -246,12 +246,12 @@ module.exports = class Estadisticas {
         return { sucursales, total, estados, edoFiltro };
     }
 
-    static async getDetalleSucursalPagina(id_sucursal, periodo = 'semana') {
+    static async getDetalleSucursalPagina(id_sucursal, periodo = 'semana', opciones = {}) {
         if (!supabase) return null;
 
         const hoy = new Date();
 
-        let inicioActual, inicioAnterior, finAnterior, labels;
+        let inicioActual, finActual, inicioAnterior, finAnterior, labels;
 
         if (periodo === 'semana') {
             // Lunes de la semana actual
@@ -288,6 +288,24 @@ module.exports = class Estadisticas {
             }
             finAnterior = new Date(inicioActual.getTime() - 1);
             labels = Array.from({length: 15}, (_, i) => String(i + 1));
+        } else if (periodo === 'personalizado') {
+            const MESES_CORTOS_P = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+            inicioActual   = new Date(opciones.desde      + 'T00:00:00');
+            finActual      = new Date(opciones.hasta      + 'T23:59:59');
+            inicioAnterior = new Date(opciones.comp_desde + 'T00:00:00');
+            finAnterior    = new Date(opciones.comp_hasta + 'T23:59:59');
+
+            const diffMs  = finActual.getTime() - inicioActual.getTime();
+            const numDias = Math.min(Math.ceil(diffMs / 86400000) + 1, 90);
+
+            labels = [];
+            for (let i = 0; i < numDias; i++) {
+                const d = new Date(inicioActual);
+                d.setDate(inicioActual.getDate() + i);
+                labels.push(numDias <= 20
+                    ? `${d.getDate()} ${MESES_CORTOS_P[d.getMonth()]}`
+                    : String(d.getDate()));
+            }
         } else {
             // Mes: últimos 6 meses vs 6 meses anteriores, agrupados por mes
             inicioActual   = new Date(hoy.getFullYear(), hoy.getMonth() - 5, 1, 0, 0, 0);
@@ -314,19 +332,26 @@ module.exports = class Estadisticas {
         const filtroAnterior = toDbStr(inicioAnterior);
         console.log(`[detalle] sucursal=${id_sucursal} periodo=${periodo} inicioActual="${filtroActual}" inicioAnterior="${filtroAnterior}"`);
 
-        const [{ data: ordenesActual, error: e1 }, { data: ordenesAnterior, error: e2 }] = await Promise.all([
-            supabase.from('orden')
-                .select('fecha_realizada, subtotal, estado')
-                .eq('id_sucursal', id_sucursal)
-                .gte('fecha_realizada', filtroActual)
-                .neq('estado', 'cancelada'),
-            supabase.from('orden')
-                .select('fecha_realizada, subtotal')
-                .eq('id_sucursal', id_sucursal)
-                .gte('fecha_realizada', filtroAnterior)
-                .lt('fecha_realizada', filtroActual)
-                .neq('estado', 'cancelada')
-        ]);
+        let qActual = supabase.from('orden')
+            .select('fecha_realizada, subtotal, estado')
+            .eq('id_sucursal', id_sucursal)
+            .gte('fecha_realizada', filtroActual)
+            .neq('estado', 'cancelada');
+
+        let qAnterior = supabase.from('orden')
+            .select('fecha_realizada, subtotal')
+            .eq('id_sucursal', id_sucursal)
+            .gte('fecha_realizada', filtroAnterior)
+            .neq('estado', 'cancelada');
+
+        if (periodo === 'personalizado' && finActual && finAnterior) {
+            qActual   = qActual.lte('fecha_realizada', toDbStr(finActual));
+            qAnterior = qAnterior.lte('fecha_realizada', toDbStr(finAnterior));
+        } else {
+            qAnterior = qAnterior.lt('fecha_realizada', filtroActual);
+        }
+
+        const [{ data: ordenesActual, error: e1 }, { data: ordenesAnterior, error: e2 }] = await Promise.all([qActual, qAnterior]);
         console.log(`[detalle] resultados actual=${ordenesActual?.length ?? 'null'} error=${e1?.message ?? 'ok'} | anterior=${ordenesAnterior?.length ?? 'null'} error=${e2?.message ?? 'ok'}`);
 
         // 3. KPIs
@@ -357,6 +382,19 @@ module.exports = class Estadisticas {
         } else if (periodo === 'quincena') {
             // Iterar 15 días desde el inicio de cada quincena
             for (let i = 0; i < 15; i++) {
+                const dActual = new Date(inicioActual);
+                dActual.setDate(inicioActual.getDate() + i);
+                const dActualStr = toDateStr(dActual);
+                datosActual.push((ordenesActual || []).filter(o => o.fecha_realizada.startsWith(dActualStr)).length);
+
+                const dAnt = new Date(inicioAnterior);
+                dAnt.setDate(inicioAnterior.getDate() + i);
+                const dAntStr = toDateStr(dAnt);
+                datosAnterior.push((ordenesAnterior || []).filter(o => o.fecha_realizada.startsWith(dAntStr)).length);
+            }
+        } else if (periodo === 'personalizado') {
+            // Iterar día a día según la longitud del rango actual (labels ya calculados)
+            for (let i = 0; i < labels.length; i++) {
                 const dActual = new Date(inicioActual);
                 dActual.setDate(inicioActual.getDate() + i);
                 const dActualStr = toDateStr(dActual);
@@ -398,6 +436,9 @@ module.exports = class Estadisticas {
             domingoActual.setDate(inicioActual.getDate() + 6);
             finActualLabel   = `${fmt(inicioActual)} - ${fmt(domingoActual)}`;
             finAnteriorLabel = `${fmt(inicioAnterior)} - ${fmt(new Date(inicioActual.getTime() - 86400000))}`;
+        } else if (periodo === 'personalizado') {
+            finActualLabel   = `${fmt(inicioActual)} - ${fmt(new Date(opciones.hasta      + 'T00:00:00'))}`;
+            finAnteriorLabel = `${fmt(inicioAnterior)} - ${fmt(new Date(opciones.comp_hasta + 'T00:00:00'))}`;
         } else if (periodo === 'quincena') {
             const mes = hoy.getMonth();
             const hoyDia = hoy.getDate();
