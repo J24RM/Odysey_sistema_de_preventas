@@ -21,6 +21,7 @@ const adminProductoRoutes = require('./routes/admin/producto.routes');
 const adminOrdenesRoutes = require('./routes/admin/ordenes.routes');
 const adminClientesRoutes = require('./routes/admin/clientes.routes');
 const adminEstadisticasRoutes = require('./routes/admin/estadisticas.routes');
+const adminBitacoraRoutes = require('./routes/admin/bitacora.routes');
 const adminCampaniaRoutes = require('./routes/admin/campania.routes');
 const clienteRoutes = require('./routes/cliente.routes')
 
@@ -181,6 +182,7 @@ app.use('/admin', requireAdmin, adminProductoRoutes);
 app.use('/admin', requireAdmin, adminOrdenesRoutes);
 app.use('/admin', requireAdmin, adminClientesRoutes);
 app.use('/admin', requireAdmin, adminEstadisticasRoutes);
+app.use('/admin', requireAdmin, adminBitacoraRoutes);
 app.use('/admin', requireAdmin, adminCampaniaRoutes);
 
 
