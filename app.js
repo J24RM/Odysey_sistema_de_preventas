@@ -183,6 +183,7 @@ app.use('/admin', requireAdmin, adminOrdenesRoutes);
 app.use('/admin', requireAdmin, adminClientesRoutes);
 app.use('/admin', requireAdmin, adminEstadisticasRoutes);
 app.use('/admin', requireAdmin, adminBitacoraRoutes);
+app.use('/admin', requireAdmin, adminCampaniaRoutes);
 
 
 // Rutas del Cliente
