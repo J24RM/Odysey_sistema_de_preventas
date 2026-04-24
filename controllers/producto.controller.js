@@ -1,6 +1,7 @@
 const Producto = require('../models/producto.model');
 const Calificacion = require('../models/calificacion.model');
 const Estadisticas = require('../models/estadisticas.model');
+const Log = require('../models/log.model');
 const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs');
@@ -82,6 +83,7 @@ exports.postAgregarProducto = async (request, response) => {
             });
 
             log('ADMIN', 'PRODUCTO AGREGADO', `id_admin: ${request.session.usuario}, producto: "${nombre}" (clave: ${clave})`);
+            try { await Log.registrar(request.session.usuario, `Agregó producto: ${clave}`); } catch (_) {}
 
             // Mostrar el mensaje de éxito
             return response.render('admin/home_agregarProducto', {
@@ -393,6 +395,10 @@ exports.postCargarBulk = async (request, response) => {
         errorBulk = 'No se recibió ningún archivo. Selecciona al menos un CSV o imágenes.';
     }
 
+    if (resultadoCSV?.insertados?.length > 0) {
+        try { await Log.registrar(request.session.usuario, `Agregó archivo con productos: ${resultadoCSV.insertados.length} insertados`); } catch (_) {}
+    }
+
     return response.render('admin/home_agregarProducto', {
         usuario: request.session.usuario,
         formulario: null,
@@ -562,6 +568,10 @@ exports.postCargarCSV = async (request, response) => {
             }
         }
 
+        if (insertados.length > 0) {
+            try { await Log.registrar(request.session.usuario, `Agregó archivo con productos: ${insertados.length} insertados`); } catch (_) {}
+        }
+
         return response.render('admin/home_agregarProducto', {
             usuario: request.session.usuario,
             formulario: null,
@@ -623,6 +633,7 @@ exports.postEditarProducto = async (request, response) => {
             });
 
             log('ADMIN', 'PRODUCTO EDITADO', `id_admin: ${request.session.usuario}, id_producto: ${id} (clave: ${clave})`);
+            try { await Log.registrar(request.session.usuario, `Editó información de producto: ${clave}`); } catch (_) {}
 
             return response.render('admin/home_editarProducto', {
                 usuario: request.session.usuario,
