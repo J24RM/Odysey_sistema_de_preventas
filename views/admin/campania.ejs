@@ -125,50 +125,6 @@
                     </div>
                 </section>
 
-                <!-- ─── 4. COLOR DEL TEMA ─── -->
-                <section class="bg-white border border-gray-200 rounded p-6">
-                    <h2 class="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
-                        <span class="w-6 h-6 rounded-full bg-blue-700 text-white text-xs flex items-center justify-center font-bold">4</span>
-                        Color del Tema
-                    </h2>
-                    <div class="flex items-start gap-8">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Color principal</label>
-                            <div class="flex items-center gap-3">
-                                <input type="color" name="color_tema"
-                                    value="<%= config.color_tema || '#002736' %>"
-                                    id="colorPicker"
-                                    class="w-14 h-10 border border-gray-300 rounded cursor-pointer p-0.5">
-                                <input type="text" id="colorHex" readonly
-                                    value="<%= config.color_tema || '#002736' %>"
-                                    class="w-28 px-3 py-2 border border-gray-200 rounded text-sm font-mono text-gray-600 bg-gray-50">
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Vista previa</label>
-                            <div class="flex gap-3 items-stretch">
-                                <div id="previewSidebar" class="w-20 rounded flex items-center justify-center text-white text-xs font-semibold py-4"
-                                    style="background: <%= config.color_tema || '#002736' %>">
-                                    Sidebar
-                                </div>
-                                <div id="previewBanner" class="flex-1 rounded flex items-center gap-2 px-3 py-2"
-                                    style="background: <%= config.color_tema || '#002736' %>">
-                                    <div class="flex gap-1">
-                                        <div class="w-8 h-8 rounded text-white text-xs flex items-center justify-center font-bold" style="background:rgba(255,255,255,0.15)">00</div>
-                                        <div class="w-8 h-8 rounded text-white text-xs flex items-center justify-center font-bold" style="background:rgba(255,255,255,0.15)">00</div>
-                                        <div class="w-8 h-8 rounded text-white text-xs flex items-center justify-center font-bold" style="background:rgba(255,255,255,0.15)">00</div>
-                                    </div>
-                                    <span class="text-white text-xs font-semibold opacity-80">Banner + Timer</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <ul class="mt-4 text-xs text-gray-500 space-y-0.5">
-                        <li>• Afecta el panel lateral (admin)</li>
-                        <li>• Afecta el fondo del banner y temporizador (admin y cliente)</li>
-                        <li>• Afecta el fondo del lado derecho de la pantalla de login</li>
-                    </ul>
-                </section>
 
                 <div class="flex justify-end">
                     <button type="submit"
@@ -183,17 +139,6 @@
 
     <%- include('partials/footer.ejs') %>
 
-    <script>
-        const picker = document.getElementById('colorPicker');
-        const hexInput = document.getElementById('colorHex');
-        const previewSidebar = document.getElementById('previewSidebar');
-        const previewBanner = document.getElementById('previewBanner');
 
-        picker.addEventListener('input', () => {
-            hexInput.value = picker.value;
-            previewSidebar.style.background = picker.value;
-            previewBanner.style.background = picker.value;
-        });
-    </script>
 </body>
 </html>
