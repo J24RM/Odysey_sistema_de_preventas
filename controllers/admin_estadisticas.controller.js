@@ -72,7 +72,7 @@ exports.getDetalleSucursalPagina = async (request, response) => {
     const comp_hasta = request.query.comp_hasta || '';
 
     // Si eligió personalizado pero no llenó las fechas, caer a semana
-    if (periodo === 'personalizado' && (!desde || !hasta || !comp_desde || !comp_hasta)) {
+    if (periodo === 'personalizado' && (!desde || !hasta)) {
         periodo = 'semana';
     }
 
