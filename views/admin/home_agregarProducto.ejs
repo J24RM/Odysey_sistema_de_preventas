@@ -129,11 +129,17 @@
                                 <div class="space-y-2">
                                     <label for="productImage" class="block text-sm font-semibold text-gray-900">Imagen:</label>
                                     <label id="imageUploadLabel"
-                                        class="block w-full p-4 border-2 border-dashed border-gray-300 rounded text-center shadow-sm cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all">
-                                        <img id="imagePreview" class="hidden mx-auto mb-2 h-20 w-auto object-contain rounded" src="" alt="preview" />
-                                        <span id="imageUploadText" class="text-sm text-gray-600 font-medium">Arrastra la imagen</span>
-                                        <input id="productImage" name="imagen" type="file" accept="image/png,image/jpg,image/jpeg" required hidden />
+                                        class="block w-full p-4 border-2 border-dashed rounded text-center shadow-sm cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all <%= formulario?.imagen_temp ? 'border-green-500 bg-green-50' : 'border-gray-300' %>">
+                                        <img id="imagePreview" class="<%= formulario?.imagen_temp ? '' : 'hidden' %> mx-auto mb-2 h-20 w-auto object-contain rounded"
+                                            src="<%= formulario?.imagen_temp ? '/uploads/' + formulario.imagen_temp : '' %>" alt="preview" />
+                                        <span id="imageUploadText" class="text-sm text-gray-600 font-medium">
+                                            <%= formulario?.imagen_temp ? formulario.imagen_temp : 'Arrastra la imagen' %>
+                                        </span>
+                                        <input id="productImage" name="imagen" type="file" accept="image/png,image/jpg,image/jpeg" hidden />
                                     </label>
+                                    <% if (formulario?.imagen_temp) { %>
+                                        <input type="hidden" name="imagen_temp" value="<%= formulario.imagen_temp %>">
+                                    <% } %>
                                 </div>
 
                                 <!-- Precio y toggle activo -->
@@ -366,10 +372,11 @@
             const unidad_venta = document.getElementById('saleUnit').value;
             const unidad_medida= document.getElementById('measureUnit').value;
             const imagen       = document.getElementById('productImage').files[0];
+            const imagenTemp   = document.querySelector('input[name="imagen_temp"]')?.value;
             const precio       = document.getElementById('productPrice').value.trim();
             const peso         = document.getElementById('productWeight').value.trim();
 
-            if (!nombre || !descripcion || !clave || !unidad_venta || !unidad_medida || !imagen || !precio || !peso) {
+            if (!nombre || !descripcion || !clave || !unidad_venta || !unidad_medida || (!imagen && !imagenTemp) || !precio || !peso) {
                 alert('Por favor, llena todos los campos correctamente.');
                 return;
             }
