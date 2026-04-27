@@ -8,41 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     * { font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    .chart-tooltip {
-        position: absolute;
-        pointer-events: none;
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(4px);
-        color: white;
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-size: 12px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        z-index: 100;
-        display: none;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        min-width: 140px;
-    }
-    .tooltip-header {
-        font-weight: 800;
-        font-size: 13px;
-        margin-bottom: 6px;
-        padding-bottom: 6px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        color: #f8fafc;
-    }
-    .tooltip-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 4px;
-    }
-    .tooltip-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 2px;
-    }
-    .hover-trigger { cursor: crosshair; }
+
 </style>
 </head>
 
@@ -73,7 +39,7 @@
             <div class="flex items-center gap-4">
                 <div class="w-24 h-24 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center border border-gray-100">
                     <% if (productoMasVendido.img) { %>
-                        <img src="<%= productoMasVendido.img %>" alt="Producto" class="max-w-full max-h-full object-contain"
+                        <img src="/uploads/<%= productoMasVendido.img %>" alt="Producto" class="max-w-full max-h-full object-contain"
                              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                         <span class="text-3xl hidden items-center justify-center">📦</span>
                     <% } else { %>
@@ -104,14 +70,6 @@
                     <p class="text-5xl font-extrabold text-gray-800 leading-none"><%= totalMensual %></p>
                     <p class="text-xs text-gray-400 mt-2">Realizados en total</p>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0 mt-1">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <rect x="2" y="12" width="4" height="10" rx="1" fill="#a78bfa" opacity="0.5"/>
-                        <rect x="8" y="8" width="4" height="14" rx="1" fill="#a78bfa" opacity="0.7"/>
-                        <rect x="14" y="4" width="4" height="18" rx="1" fill="#7c3aed"/>
-                        <rect x="20" y="9" width="2" height="13" rx="1" fill="#a78bfa" opacity="0.4"/>
-                    </svg>
-                </div>
             </div>
         </div>
 
@@ -136,156 +94,10 @@
 
     <!-- Line chart card: Total de ventas en el mes -->
     <div class="bg-white rounded-[14px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.07)] mb-6">
-        <p class="text-[13px] font-bold text-gray-400 tracking-wide mb-6 uppercase">Total de ventas en el mes</p>
+        <p class="text-[13px] font-bold text-gray-400 tracking-wide mb-6 uppercase">Comparación</p>
 
-        <%
-            const vd = typeof ventasDiarias !== 'undefined' ? ventasDiarias : { actual: [], anterior: [], diasEnMes: 30, diasEnMesAnterior: 30 };
-            const diasMes = vd.diasEnMes || 30;
-            const actualArr = vd.actual || [];
-            const anteriorArr = vd.anterior || [];
-            const maxVal = Math.max(1, ...actualArr, ...anteriorArr);
-
-            // Chart dimensions
-            const LC = 60, RC = 890, TC = 40, BC = 310;
-            const LW = RC - LC;
-            const LH = BC - TC;
-
-            // Nice max for Y axis
-            function niceMaxLine(v) {
-                if (v <= 0) return 1;
-                const exp = Math.floor(Math.log10(v));
-                const mag = Math.pow(10, exp);
-                for (const f of [1, 2, 5, 10]) {
-                    if (v <= f * mag) return f * mag;
-                }
-                return 10 * mag;
-            }
-            const yMax = niceMaxLine(maxVal);
-
-            // Generate Y axis ticks (integers)
-            const yStep = Math.max(1, Math.ceil(yMax / 5));
-            const yTicks = [];
-            for (let v = 0; v <= yMax; v += yStep) yTicks.push(v);
-            if (yTicks[yTicks.length - 1] !== yMax) yTicks.push(yMax);
-
-            // Generate points for the line charts
-            function makePoints(arr, days) {
-                const pts = [];
-                for (let i = 0; i < days; i++) {
-                    const x = Math.round(LC + (i / (days - 1 || 1)) * LW);
-                    const val = arr[i] || 0;
-                    const y = Math.round(BC - (val / yMax) * LH);
-                    pts.push({ x, y, val, day: i + 1 });
-                }
-                return pts;
-            }
-
-            const ptsActual = makePoints(actualArr, diasMes);
-            const ptsAnterior = makePoints(anteriorArr, vd.diasEnMesAnterior || diasMes);
-
-            // Build polyline strings
-            const lineActual = ptsActual.map(p => p.x + ',' + p.y).join(' ');
-            const lineAnterior = ptsAnterior.map(p => p.x + ',' + p.y).join(' ');
-
-            // Area fill under actual line
-            const areaActual = LC + ',' + BC + ' ' + lineActual + ' ' + RC + ',' + BC;
-        %>
-
-        <svg viewBox="0 0 960 380" width="100%">
-            <!-- Grid lines -->
-            <% yTicks.forEach(val => {
-                const gy = Math.round(BC - (val / yMax) * LH);
-            %>
-                <line x1="<%= LC %>" y1="<%= gy %>" x2="<%= RC %>" y2="<%= gy %>"
-                      stroke="#f3f4f6" stroke-width="1"/>
-                <text x="<%= LC - 8 %>" y="<%= gy + 4 %>" text-anchor="end"
-                      font-size="10" fill="#9ca3af"><%= val %></text>
-            <% }) %>
-
-            <!-- Axis lines -->
-            <line x1="<%= LC %>" y1="<%= TC %>" x2="<%= LC %>" y2="<%= BC %>" stroke="#e5e7eb" stroke-width="1"/>
-            <line x1="<%= LC %>" y1="<%= BC %>" x2="<%= RC %>" y2="<%= BC %>" stroke="#e5e7eb" stroke-width="1"/>
-
-            <!-- X axis labels (days) -->
-            <% for (let d = 1; d <= diasMes; d++) {
-                const dx = Math.round(LC + ((d - 1) / (diasMes - 1 || 1)) * LW);
-            %>
-                <text x="<%= dx %>" y="<%= BC + 18 %>" text-anchor="middle"
-                      font-size="9" fill="#9ca3af"><%= d %></text>
-            <% } %>
-
-            <!-- Area fill under current month line -->
-            <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
-                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/>
-                </linearGradient>
-            </defs>
-            <polygon points="<%= areaActual %>" fill="url(#areaGrad)"/>
-
-            <!-- Previous month line (pink/red, dashed) -->
-            <% if (ptsAnterior.length > 1) { %>
-            <polyline points="<%= lineAnterior %>"
-                      fill="none" stroke="#f87171" stroke-width="2"
-                      stroke-dasharray="6 4" stroke-opacity="0.6" stroke-linejoin="round"/>
-            <% } %>
-
-            <!-- Current month line (blue) -->
-            <% if (ptsActual.length > 1) { %>
-            <polyline points="<%= lineActual %>"
-                      fill="none" stroke="#3b82f6" stroke-width="2.5"
-                      stroke-linejoin="round" stroke-linecap="round"/>
-            <% } %>
-
-            <!-- Data points for current month -->
-            <% ptsActual.forEach(p => { %>
-                <% if (p.val > 0) { %>
-                <circle cx="<%= p.x %>" cy="<%= p.y %>" r="3" fill="#3b82f6" stroke="#fff" stroke-width="1.5">
-                    <title>Día <%= p.day %>: <%= p.val %> pedidos</title>
-                </circle>
-                <% } %>
-            <% }) %>
-
-            <!-- Data points for previous month -->
-            <% ptsAnterior.forEach(p => { %>
-                <% if (p.val > 0) { %>
-                <circle cx="<%= p.x %>" cy="<%= p.y %>" r="2.5" fill="#f87171" stroke="#fff" stroke-width="1">
-                    <title>Mes anterior, día <%= p.day %>: <%= p.val %> pedidos</title>
-                </circle>
-                <% } %>
-            <% }) %>
-
-            <!-- Legend -->
-            <rect x="<%= LC %>" y="<%= BC + 35 %>" width="14" height="4" rx="2" fill="#3b82f6"/>
-            <text x="<%= LC + 20 %>" y="<%= BC + 40 %>" font-size="11" fill="#374151">Mes Actual</text>
-            <rect x="<%= LC + 120 %>" y="<%= BC + 35 %>" width="14" height="4" rx="2" fill="#f87171" opacity="0.6"/>
-            <text x="<%= LC + 140 %>" y="<%= BC + 40 %>" font-size="11" fill="#374151">Mes Anterior</text>
-
-            <!-- Hover trigger zones -->
-            <% ptsActual.forEach((p, i) => { 
-                const w = LW / (diasMes - 1 || 1);
-                const yAnt = ptsAnterior[i] ? ptsAnterior[i].y : BC;
-            %>
-                <rect x="<%= p.x - w/2 %>" y="<%= TC %>" width="<%= w %>" height="<%= BC - TC %>"
-                      fill="transparent" class="hover-trigger"
-                      data-day="<%= p.day %>"
-                      data-actual="<%= p.val %>"
-                      data-anterior="<%= anteriorArr[i] || 0 %>"
-                      data-x="<%= p.x %>"
-                      data-y-act="<%= p.y %>"
-                      data-y-ant="<%= yAnt %>"
-                />
-            <% }) %>
-
-            <!-- Vertical indicator line and highlight dots -->
-            <line id="hover-line" x1="0" y1="<%= TC %>" x2="0" y2="<%= BC %>" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 4" style="display:none;" />
-            <circle id="hover-dot-act" r="5" fill="#3b82f6" stroke="#fff" stroke-width="2" style="display:none;" />
-            <circle id="hover-dot-ant" r="4" fill="#f87171" stroke="#fff" stroke-width="1.5" style="display:none;" />
-        </svg>
+        <canvas id="chart"></canvas>
     </div>
-
-    <!-- Tooltip Element -->
-    <div id="chart-tooltip" class="chart-tooltip"></div>
 
     <!-- Weekly branches table -->
     <div class="bg-white rounded-[14px] shadow-[0_4px_16px_rgba(0,0,0,0.07)] overflow-hidden">
@@ -340,6 +152,7 @@
 
 <%- include('partials/footer.ejs') %>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const currentPath = window.location.pathname;
     document.querySelectorAll('.tab-link').forEach(tab => {
@@ -349,66 +162,48 @@
         }
     });
 
-    // Tooltip Logic
-    const tooltip = document.getElementById('chart-tooltip');
-    const hoverLine = document.getElementById('hover-line');
-    const dotAct = document.getElementById('hover-dot-act');
-    const dotAnt = document.getElementById('hover-dot-ant');
-    const triggers = document.querySelectorAll('.hover-trigger');
+    const vd = <%- JSON.stringify(typeof ventasDiarias !== 'undefined' ? ventasDiarias : { actual: [], anterior: [], diasEnMes: 30 }) %>;
+    const diasMes = vd.diasEnMes || 30;
+    const dataActual = vd.actual || [];
+    const dataAnterior = vd.anterior || [];
 
-    triggers.forEach(trigger => {
-        trigger.addEventListener('mouseenter', (e) => {
-            const { day, actual, anterior, x, yAct, yAnt } = trigger.dataset;
+    // Create labels based on number of days (e.g., 1, 2, 3...)
+    const labels = Array.from({length: diasMes}, (_, i) => (i + 1).toString());
 
-            tooltip.innerHTML = `
-                <div class="tooltip-header">${day}</div>
-                <div class="tooltip-row">
-                    <div class="tooltip-dot bg-blue-500"></div>
-                    <span>Periodo Actual: <b>${actual}</b></span>
-                </div>
-                <div class="tooltip-row">
-                    <div class="tooltip-dot bg-red-400 opacity-60"></div>
-                    <span>Periodo Anterior: <b>${anterior}</b></span>
-                </div>
-            `;
-            tooltip.style.display = 'block';
-            
-            // Show guide line and dots
-            hoverLine.setAttribute('x1', x);
-            hoverLine.setAttribute('x2', x);
-            hoverLine.style.display = 'block';
-
-            dotAct.setAttribute('cx', x);
-            dotAct.setAttribute('cy', yAct);
-            dotAct.style.display = 'block';
-
-            dotAnt.setAttribute('cx', x);
-            dotAnt.setAttribute('cy', yAnt);
-            dotAnt.style.display = 'block';
-        });
-
-        trigger.addEventListener('mousemove', (e) => {
-            // Position tooltip
-            const offset = 15;
-            let left = e.pageX + offset;
-            let top = e.pageY - 40;
-
-            // Simple collision detection for right edge
-            if (left + 160 > window.innerWidth) {
-                left = e.pageX - 160 - offset;
+    const ctx = document.getElementById('chart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Periodo Actual',
+                        data: dataActual,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Periodo Anterior',
+                        data: dataAnterior,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
             }
-
-            tooltip.style.left = left + 'px';
-            tooltip.style.top = top + 'px';
         });
-
-        trigger.addEventListener('mouseleave', () => {
-            tooltip.style.display = 'none';
-            hoverLine.style.display = 'none';
-            dotAct.style.display = 'none';
-            dotAnt.style.display = 'none';
-        });
-    });
+    }
 </script>
 
 </body>

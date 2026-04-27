@@ -102,13 +102,13 @@ module.exports = class Estadisticas {
 
                 const { data: prodData } = await supabase
                     .from('producto')
-                    .select('id_producto, unidad_venta, unidad_medida, precio_unitario, url_imagen')
+                    .select('id_producto, nombre, unidad_venta, unidad_medida, precio_unitario, url_imagen')
                     .eq('id_producto', idProd)
                     .single();
 
                 if (prodData) {
                     result.productoMasVendido = {
-                        nombre: "ID Producto: " + prodData.id_producto,
+                        nombre: prodData.nombre || ("ID Producto: " + prodData.id_producto),
                         desc: prodData.unidad_venta + " " + prodData.unidad_medida,
                         img: prodData.url_imagen
                     };
@@ -170,12 +170,12 @@ module.exports = class Estadisticas {
             if (topProdIds.length > 0) {
                 const { data: prodsData } = await supabase
                     .from('producto')
-                    .select('id_producto, unidad_venta, unidad_medida, precio_unitario, url_imagen')
+                    .select('id_producto, nombre, unidad_venta, unidad_medida, precio_unitario, url_imagen')
                     .in('id_producto', topProdIds);
 
                 if (prodsData) {
                     result.productosSemana = prodsData.map(p => ({
-                        nombre: "ID Producto: " + p.id_producto,
+                        nombre: p.nombre || ("ID Producto: " + p.id_producto),
                         desc: p.unidad_venta + " " + p.unidad_medida,
                         precio: p.precio_unitario,
                         img: p.url_imagen
