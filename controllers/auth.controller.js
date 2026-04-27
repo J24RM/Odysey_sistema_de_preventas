@@ -133,7 +133,7 @@ exports.getClienteHome = async (request, response) => {
             productos = result.productos;
             total = result.total;
         }
-
+        
         const totalPages = searchQuery ? 1 : Math.ceil(total / limit);
         const promedios = await Calificacion.obtenerPromediosTodos();
 

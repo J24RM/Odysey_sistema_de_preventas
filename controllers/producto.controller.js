@@ -180,6 +180,7 @@ exports.getProductoAdmin = async (request, response) => {
         const producto = {
             id: productoRaw.id_producto,
             nombre: productoRaw.nombre,
+            clave: productoRaw.clave,
             precio: productoRaw.precio_unitario,
             peso: productoRaw.peso || 'N/A',
             volumen: productoRaw.volumen || 'N/A',
@@ -190,6 +191,7 @@ exports.getProductoAdmin = async (request, response) => {
         };
 
         const productosDestacados = await Estadisticas.getTop5ProductosDestacados();
+
 
         response.render('admin/product', {
             usuario: request.session.usuario,
@@ -216,6 +218,7 @@ exports.getProductoCliente = async (request, response) => {
         const producto = {
             id: productoRaw.id_producto,
             nombre: productoRaw.nombre,
+            clave: productoRaw.clave,
             precio: productoRaw.precio_unitario,
             peso: productoRaw.peso || 0,
             volumen: productoRaw.volumen || 'N/A',
@@ -229,6 +232,8 @@ exports.getProductoCliente = async (request, response) => {
             Calificacion.obtenerPorProducto(id),
             Estadisticas.getTop5ProductosDestacados()
         ]);
+
+        console.log(productosDestacados)
 
         response.render('cliente/product', {
             usuario: request.session.usuario,
