@@ -58,7 +58,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Configuración de multer para subida de imágenes
 const fileStorage = multer.diskStorage({
     destination: (request, file, callback) => {
-        callback(null, path.join(__dirname, 'uploads'));
+        const bannerFields = ['banner', 'banner_login', 'banner_general'];
+        if (bannerFields.includes(file.fieldname)) {
+            callback(null, path.join(__dirname, 'public', 'img'));
+        } else {
+            callback(null, path.join(__dirname, 'uploads'));
+        }
     },
     filename: (request, file, callback) => {
         // Generar nombre único sin caracteres problemáticos
@@ -90,7 +95,8 @@ app.use(multer({ storage: fileStorage, fileFilter }).fields([
     { name: 'imagenes', maxCount: 50 },
     { name: 'archivoCSV', maxCount: 1 },
     { name: 'banner_login', maxCount: 1 },
-    { name: 'banner_timer', maxCount: 1 }
+    { name: 'banner_general', maxCount: 1 },
+    { name: 'banner', maxCount: 1 }
 ]));
 
 app.use(csrfProtection);

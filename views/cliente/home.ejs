@@ -22,7 +22,7 @@
 
 
     <% const campActiva = config && config.activo; %>
-    <% const timerImgSrc = (config && config.banner_general_url) ? '/uploads/' + config.banner_general_url : '/img/niñoMundial.png'; %>
+    <% const timerImgSrc = (config && config.banner_general_url) ? '/img/' + config.banner_general_url : '/img/niñoMundial.png'; %>
     <% const nombreCamp = (config && config.nombre) ? config.nombre : 'Mundial 2026'; %>
     <% const fechaFinIso = (config && config.fecha_de_fin) ? new Date(config.fecha_de_fin).toISOString() : '2026-06-11T00:00:00.000Z'; %>
     <% if (campActiva) { %>
