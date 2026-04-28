@@ -43,7 +43,7 @@ exports.getCarrito = async (request, response, next) => {
 
         // Obtener tiempo de cancelacion
         const configuracion = await configuracionModel.ObtenerConfiguracionActiva();
-        console.log(configuracion);
+        console.log(detalleProductos);
 
         response.render('cliente/cart', {
             csrfToken: request.csrfToken(),

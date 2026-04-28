@@ -97,9 +97,15 @@
             class="text-base font-semibold text-gray-900 hover:underline leading-snug">
           <%= producto.nombre %>
         </a>
-        <p class="text-base text-gray-600 leading-snug">
-          Peso: <%= producto.peso %> Kg
-        </p>
+        <div class="flex items-center gap-3 mt-1">
+          <span class="text-xs text-gray-400 font-medium tracking-wide uppercase">
+            <span class="text-gray-500 font-semibold normal-case tracking-normal"> SKU: <%= producto.clave %></span>
+          </span>
+          <span class="text-gray-300 text-xs">·</span>
+          <span class="text-xs text-gray-400 font-medium">
+            <span class="text-gray-500 font-semibold"><%= producto.peso %> kg</span> 
+          </span>
+        </div>
         
         <div class="flex items-center gap-4 mt-4">
           <div class="flex items-center gap-2 border-2 rounded-full px-3 py-1" style="border-color: #00000066;">
@@ -185,6 +191,7 @@
                      class="object-contain h-full w-full">
             </div>
             <p class="text-sm font-semibold text-gray-800 text-center leading-snug mb-2 line-clamp-2"><%= p.nombre %></p>
+            <p class="text-sm font-semibold text-gray-800 text-center leading-snug mb-2 line-clamp-2">SKU: <%= p.clave %></p>
             <p class="text-base font-black text-gray-900">$ <%= Number(p.precio_unitario).toLocaleString('es-MX') %></p>
         </a>
         <% }); %>
