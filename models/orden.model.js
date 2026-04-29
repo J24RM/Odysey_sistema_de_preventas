@@ -76,8 +76,8 @@ module.exports = class Orden {
 
     static async CancelarOrden(id_orden) {
         const { data, error } = await supabase
-            .rpc('cancelar_orden_tx', {
-                p_id_orden: id_orden
+            .rpc('cancelar_orden', {
+                p_id_orden: parseInt(id_orden)
             });
             if (error) throw error;
 

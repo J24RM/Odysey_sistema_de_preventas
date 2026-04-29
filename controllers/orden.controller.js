@@ -237,35 +237,33 @@ exports.getDetalleOrden = async (req, res) => {
         }
 
         else{
-            const configuracion = await configuracionModel.ObtenerConfiguracionActiva();
+            const tiempoCancelacion = await configuracionModel.ObtenerTiempoCancelacion();
 
-            // Tiempo actual en México
-            const ahora = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Mexico_City" }));
-
-
-            let esCancelable = false;
-            let transcurridoMs = 0;
-            let limiteMs = configuracion.tiempo_de_cancelacion * 60 * 1000;
-            let fechaOrden = null;
-
-            if (orden && orden.fecha_realizada) {
-                // Convertir fecha_realizada a Date 
-                fechaOrden = new Date(orden.fecha_realizada.replace(" ", "T"));
-
-                // Diferencia en minutos
-                const diferenciaMinutos = (ahora - fechaOrden) / (1000 * 60);
-
-                esCancelable = diferenciaMinutos <= configuracion.tiempo_de_cancelacion;
-                transcurridoMs = ahora - fechaOrden;
-            }
-
-            if(esCancelable && fechaOrden){
-                orden.cancelar = true;
-                orden.segundosRestantes = Math.max(0, Math.floor((limiteMs - transcurridoMs) / 1000));
-            }
-            else{
+            if (tiempoCancelacion === null) {
                 orden.cancelar = false;
                 orden.segundosRestantes = 0;
+            } else {
+                const ahora = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Mexico_City" }));
+
+                let esCancelable = false;
+                let transcurridoMs = 0;
+                const limiteMs = tiempoCancelacion * 60 * 1000;
+                let fechaOrden = null;
+
+                if (orden.fecha_realizada) {
+                    fechaOrden = new Date(orden.fecha_realizada.replace(" ", "T"));
+                    const diferenciaMinutos = (ahora - fechaOrden) / (1000 * 60);
+                    esCancelable = diferenciaMinutos <= tiempoCancelacion;
+                    transcurridoMs = ahora - fechaOrden;
+                }
+
+                if (esCancelable && fechaOrden) {
+                    orden.cancelar = true;
+                    orden.segundosRestantes = Math.max(0, Math.floor((limiteMs - transcurridoMs) / 1000));
+                } else {
+                    orden.cancelar = false;
+                    orden.segundosRestantes = 0;
+                }
             }
         }
 

@@ -113,6 +113,19 @@ module.exports = class Configuracion {
         if (error) throw error;
     }
 
+    // Obtiene el tiempo de cancelación desde campania activa (schema post-migración)
+    static async ObtenerTiempoCancelacion() {
+        const { data, error } = await supabase
+            .from('campania')
+            .select('tiempo_de_cancelacion')
+            .eq('activo', true)
+            .order('id_campania', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (error) throw error;
+        return data?.tiempo_de_cancelacion ?? null;
+    }
+
     // Mantiene compatibilidad con código de productos que llama a GuardarConfig
     static async GuardarConfig(campos) {
         const { data: existing } = await supabase
