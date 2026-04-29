@@ -207,14 +207,29 @@
 
                         <% if (mensajeBulk) { %>
                         <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500">
-                            <p class="text-green-700 font-semibold">Se guardaron <%= mensajeBulk.cantidad %> imagen(es) correctamente.</p>
+                            <% if (mensajeBulk.guardadas > 0) { %>
+                            <p class="text-green-700 font-semibold">Se guardaron <%= mensajeBulk.guardadas %> imagen(es) nueva(s) de <%= mensajeBulk.total %> recibida(s).</p>
                             <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
                                 <% mensajeBulk.nombres.forEach(n => { %><li><%= n %></li><% }) %>
                             </ul>
+                            <% } else { %>
+                            <p class="text-green-700 font-semibold">Se procesaron <%= mensajeBulk.total %> imagen(es). No se guardaron nuevas (todas ya existían en el sistema).</p>
+                            <% } %>
+                            <% if (mensajeBulk.duplicadas > 0) { %>
+                            <p class="mt-2 text-amber-700 text-sm font-medium"><%= mensajeBulk.duplicadas %> imagen(es) ya existían en el sistema y no se duplicaron.</p>
+                            <% } %>
                         </div>
                         <% } %>
 
                         <% if (resultadoCSV) { %>
+                            <% if (resultadoCSV.advertencias && resultadoCSV.advertencias.length > 0) { %>
+                            <div class="mb-4 p-4 bg-amber-50 border-l-4 border-amber-400">
+                                <p class="text-amber-700 font-semibold">Advertencias de imágenes duplicadas:</p>
+                                <ul class="mt-2 text-sm text-amber-700 list-disc list-inside">
+                                    <% resultadoCSV.advertencias.forEach(a => { %><li><%= a %></li><% }) %>
+                                </ul>
+                            </div>
+                            <% } %>
                             <% if (resultadoCSV.insertados.length > 0) { %>
                             <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500">
                                 <p class="text-green-700 font-semibold">Se insertaron <%= resultadoCSV.insertados.length %> producto(s) correctamente.</p>
@@ -225,7 +240,7 @@
                             <% } %>
                             <% if (resultadoCSV.errores.length > 0) { %>
                             <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500">
-                                <p class="text-red-700 font-semibold">Se encontraron <%= resultadoCSV.errores.length %> error(es) en el archivo:</p>
+                                <p class="text-red-700 font-semibold">Se encontraron <%= resultadoCSV.errores.length %> producto(s) que no pudieron agregarse:</p>
                                 <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
                                     <% resultadoCSV.errores.forEach(e => { %><li><%= e %></li><% }) %>
                                 </ul>
@@ -242,8 +257,8 @@
                                     <div>
                                         <h3 class="text-xl font-bold text-gray-900">Cargar archivo</h3>
                                         <p class="text-sm text-gray-500 mt-1">Sube un CSV o Excel con el listado de productos.</p>
-                                        <p class="text-xs text-gray-400 mt-1">Columnas requeridas (en orden): <span class="font-mono">nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave</span></p>
-                                        <p class="text-xs text-gray-400 mt-0.5">La clave no debe exceder 12 caracteres. La url_imagen debe coincidir con el nombre del archivo subido en "Subir imágenes".</p>
+                                        <p class="text-xs text-gray-400 mt-1">Columnas requeridas: <span class="font-mono">nombre, descripcion, url_imagen, unidad_venta, unidad_medida, peso, precio_unitario, activo, clave, id_campania</span></p>
+                                        <p class="text-xs text-gray-400 mt-0.5">La clave no debe exceder 12 caracteres. El <span class="font-mono">id_campania</span> debe corresponder al ID de la campaña activa. La <span class="font-mono">url_imagen</span> debe coincidir con el nombre del archivo subido en "Subir imágenes".</p>
                                     </div>
                                     <label id="csvDropZone"
                                         class="flex flex-col items-center justify-center gap-2 p-10 border-2 border-dashed border-gray-300 rounded shadow-sm cursor-pointer hover:border-blue-600 hover:bg-blue-50 transition-all">

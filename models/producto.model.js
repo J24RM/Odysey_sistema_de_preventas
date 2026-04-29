@@ -88,6 +88,14 @@ module.exports = class Producto {
         return data;
     }
 
+    static async fetchAllClaves() {
+        const { data, error } = await supabase
+            .from('producto')
+            .select('clave');
+        if (error) throw error;
+        return new Set((data || []).map(p => p.clave));
+    }
+
     static async fetchLimit(limit = 10) {
         const { data: productos, error } = await supabase
             .from('producto')
