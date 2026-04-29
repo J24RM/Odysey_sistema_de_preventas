@@ -192,6 +192,9 @@ exports.registrarOrden = async (req, res) => {
             console.error("Error correo:", err);
         });
 
+        req.session.cuenta_activa = null;
+        req.session.sucursal_activa = null;
+
         return res.redirect('/cliente/mis-pedidos?success=' + encodeURIComponent("Se envió un correo con el detalle de tu orden confirmada") + '&order=' + encodeURIComponent("Orden confirmada"));
 
     } catch (error) {
@@ -212,6 +215,8 @@ exports.postCancelarOrden = async (req, res) => {
         const data = await ordenModel.CancelarOrden(req.params.id_orden);
 
         if (data === 'OK') {
+            req.session.cuenta_activa = null;
+            req.session.sucursal_activa = null;
             return res.redirect('/cliente/mis-pedidos?success=' + encodeURIComponent(" ") + '&order=' + encodeURIComponent("Orden cancelada"));
         }
 
