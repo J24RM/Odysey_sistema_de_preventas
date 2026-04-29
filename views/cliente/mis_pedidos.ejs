@@ -186,15 +186,13 @@ window.perfilUsuario = {
         </div>
 
         <div class="pedidos-table-body">
-            <% if (pedidos.length === 0) { %>
-                <div class="py-16 text-center text-gray-500 font-medium">
-                    No tienes órdenes registradas aún.
-                </div>
-            <% } %>
+            <div id="no-orders-msg" class="py-16 text-center text-gray-500 font-medium<%= pedidos.length === 0 ? '' : ' hidden' %>">
+                No tienes órdenes registradas aún.
+            </div>
             <% pedidos.forEach((pedido) => { %>
                 <% const fecha = pedido.fecha_realizada ? new Date(pedido.fecha_realizada).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Sin fecha'; %>
                 <% const estado = pedido.estado.charAt(0).toUpperCase() + pedido.estado.slice(1); %>
-                <% const total = pedido.subtotal * 1.16; %> 
+                <% const total = pedido.subtotal * 1.16; %>
                 <div class="pedidos-row" data-id="<%= pedido.id_orden %>" data-fecha="<%= pedido.fecha_realizada || '' %>" style="cursor:pointer;">
                     <span><%= String(pedido.id_orden).padStart(4, '0') %></span>
                     <span><%= fecha %></span>
@@ -208,6 +206,13 @@ window.perfilUsuario = {
                 </div>
             <% }); %>
         </div>
+    </div>
+
+    <!-- Paginación -->
+    <div id="paginacion" class="pedidos-paginacion">
+        <button id="btn-prev">&#8592; Anterior</button>
+        <span id="info-pagina">Página 1 de 1</span>
+        <button id="btn-next">Siguiente &#8594;</button>
     </div>
 </div>
 
@@ -228,38 +233,70 @@ document.getElementById('btnConfirmarCancelacion').addEventListener('click', () 
     if (form) form.submit();
 });
 
-// Búsqueda en historial
-document.querySelector('.pedidos-search input').addEventListener('input', function () {
-    const query = this.value.trim().toLowerCase();
-    document.querySelectorAll('.pedidos-row').forEach(row => {
-        const texto = row.innerText.toLowerCase();
-        row.style.display = texto.includes(query) ? '' : 'none';
-    });
-});
+// ─── Paginación ──────────────────────────────────────────────────────────────
 
-// Filtro por periodo de tiempo
-document.querySelector('.select-filter').addEventListener('change', function () {
-    const valor = this.value;
-    const ahora = new Date();
+const PAGE_SIZE = 20;
+let currentPage  = 1;
+let visibleRows  = [];
+
+function calcularVisibles() {
+    const query = document.querySelector('.pedidos-search input').value.trim().toLowerCase();
+    const valor  = document.querySelector('.select-filter').value;
+    const ahora  = new Date();
     let diasAtras = null;
-
-    if (valor === '7 días')       diasAtras = 7;
-    else if (valor === '30 días') diasAtras = 30;
-    else if (valor === '90 días') diasAtras = 90;
+    if (valor === '7 días')        diasAtras = 7;
+    else if (valor === '30 días')  diasAtras = 30;
+    else if (valor === '90 días')  diasAtras = 90;
     else if (valor === 'Último año') diasAtras = 365;
 
-    document.querySelectorAll('.pedidos-row').forEach(row => {
-        const fechaISO = row.dataset.fecha;
-        if (!diasAtras || !fechaISO) {
-            row.style.display = '';
-            return;
+    return Array.from(document.querySelectorAll('.pedidos-row')).filter(row => {
+        if (query && !row.textContent.toLowerCase().includes(query)) return false;
+        if (diasAtras) {
+            const fechaISO = row.dataset.fecha;
+            if (fechaISO) {
+                const limite = new Date(ahora);
+                limite.setDate(ahora.getDate() - diasAtras);
+                if (new Date(fechaISO) < limite) return false;
+            }
         }
-        const fechaPedido = new Date(fechaISO);
-        const limite = new Date(ahora);
-        limite.setDate(ahora.getDate() - diasAtras);
-        row.style.display = fechaPedido >= limite ? '' : 'none';
+        return true;
     });
-});
+}
+
+function renderPagina(pagina) {
+    currentPage = pagina;
+    const todosRows = document.querySelectorAll('.pedidos-row');
+    todosRows.forEach(r => r.style.display = 'none');
+
+    const inicio = (pagina - 1) * PAGE_SIZE;
+    visibleRows.slice(inicio, inicio + PAGE_SIZE).forEach(r => r.style.display = '');
+
+    const totalPaginas = Math.max(1, Math.ceil(visibleRows.length / PAGE_SIZE));
+    document.getElementById('info-pagina').textContent = `Página ${pagina} de ${totalPaginas}`;
+    document.getElementById('btn-prev').disabled = pagina === 1;
+    document.getElementById('btn-next').disabled = pagina >= totalPaginas;
+
+    const noMsg = document.getElementById('no-orders-msg');
+    noMsg.style.display = visibleRows.length === 0 ? '' : 'none';
+
+    // Ocultar controles si todo cabe en una página
+    document.getElementById('paginacion').style.display =
+        visibleRows.length > PAGE_SIZE ? 'flex' : 'none';
+}
+
+function aplicarFiltros() {
+    visibleRows = calcularVisibles();
+    renderPagina(1);
+}
+
+document.getElementById('btn-prev').addEventListener('click', () => renderPagina(currentPage - 1));
+document.getElementById('btn-next').addEventListener('click', () => renderPagina(currentPage + 1));
+
+// Búsqueda en historial
+document.querySelector('.pedidos-search input').addEventListener('input', aplicarFiltros);
+
+// Filtro por periodo de tiempo
+document.querySelector('.select-filter').addEventListener('change', aplicarFiltros);
 
 document.querySelector('.btn-exportar').addEventListener('click', async function() {
     const btn = this;
@@ -271,14 +308,14 @@ document.querySelector('.btn-exportar').addEventListener('click', async function
         const zip = new JSZip();
         const fechaExport = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-        // Generar CSV general
+        // Generar CSV general — se usan TODOS los pedidos (textContent funciona en filas ocultas)
         const rows = document.querySelectorAll('.pedidos-row');
         let csvMain = '"HISTORIAL DE PEDIDOS - PPG Industries"\n';
         csvMain += `"Exportado el:","${fechaExport}"\n`;
         csvMain += `"Total de órdenes:","${rows.length}"\n\n`;
         csvMain += '"Orden","Fecha","Cliente","Total","Estatus"\n';
         rows.forEach(row => {
-            const data = Array.from(row.querySelectorAll('span')).map(s => s.innerText.trim());
+            const data = Array.from(row.querySelectorAll('span')).map(s => s.textContent.trim());
             csvMain += `"${data[0]}","${data[1]}","${data[2]}","${data[3]}","${data[4]}"\n`;
         });
         zip.file("historial_pedidos.csv", "\uFEFF" + csvMain);
@@ -353,8 +390,10 @@ modal.addEventListener('click', (e) => {
     if (e.target === modal) cerrarModalDetalle();
 });
 
-document.querySelectorAll('.pedidos-row').forEach(row => {
-    row.addEventListener('click', async () => {
+document.querySelector('.pedidos-table-body').addEventListener('click', async (e) => {
+    const row = e.target.closest('.pedidos-row');
+    if (!row) return;
+    {
         const idOrden = row.dataset.id;
         try {
             const res = await fetch(`/orden/detalle/${idOrden}`);
@@ -519,7 +558,7 @@ document.querySelectorAll('.pedidos-row').forEach(row => {
         } catch (err) {
             console.error('Error cargando detalle:', err);
         }
-    });
+    }
 });
 
 // Error
@@ -531,8 +570,8 @@ function mostrarError(mensaje) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Aplicar filtro por defecto al cargar
-    document.querySelector('.select-filter').dispatchEvent(new Event('change'));
+    // Inicializar paginación con el filtro de tiempo por defecto
+    aplicarFiltros();
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('error')) {
