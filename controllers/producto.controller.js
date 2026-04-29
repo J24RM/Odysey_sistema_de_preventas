@@ -361,7 +361,7 @@ exports.postCargarBulk = async (request, response) => {
 
     if (archivoCSV) {
         try {
-            const workbook = xlsx.readFile(archivoCSV.path);
+            const workbook = xlsx.readFile(archivoCSV.path, { codepage: 65001 });
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
             const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
@@ -598,7 +598,7 @@ exports.postCargarCSV = async (request, response) => {
     const uploadsDir = path.join(__dirname, '..', 'uploads');
 
     try {
-        const workbook = xlsx.readFile(archivo.path);
+        const workbook = xlsx.readFile(archivo.path, { codepage: 65001 });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });

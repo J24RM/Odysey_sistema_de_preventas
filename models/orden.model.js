@@ -1,5 +1,10 @@
 const supabase = require('../utils/supabase');
 
+function dec(s) {
+    if (!s || (!s.includes('Ã') && !s.includes('Â'))) return s;
+    try { return Buffer.from(s, 'latin1').toString('utf8'); } catch (_) { return s; }
+}
+
 module.exports = class Orden {
 
     static async obtenerOrdenEnEstadoCarrito(id_usuario) {
@@ -102,7 +107,10 @@ module.exports = class Orden {
             .eq('id_orden', id_orden);
 
         if (error) throw error;
-        return detalles || [];
+        return (detalles || []).map(d => ({
+            ...d,
+            producto: d.producto ? { ...d.producto, nombre: dec(d.producto.nombre) } : d.producto
+        }));
     }
 
     static async actualizarSucursalYCuentaPorFolio(folio, id_sucursal, id_cuenta) {
