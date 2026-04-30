@@ -87,7 +87,8 @@ const MENSAJES = {
     banner_login_ok:   'Banner de login actualizado.',
     banner_general_ok: 'Banner general actualizado.',
     estado_ok:         'Estado de campaña actualizado.',
-    cancelacion_ok:    'Tiempo de cancelación actualizado.'
+    cancelacion_ok:    'Tiempo de cancelación actualizado.',
+    campania_activada: 'Campaña activada correctamente.'
 };
 
 const ERRORES = {
@@ -95,7 +96,8 @@ const ERRORES = {
     ya_activa:        'Ya existe otra campaña activa. No pueden coexistir dos campañas activas.',
     error_banner:     'Error al procesar el banner.',
     error_estado:     'Error al cambiar el estado.',
-    error_cancelacion:'Error al actualizar el tiempo de cancelación.'
+    error_cancelacion:'Error al actualizar el tiempo de cancelación.',
+    sin_campania:     'Selecciona una campaña para activar.'
 };
 
 exports.getConfigurarCampania = async (req, res) => {
@@ -189,6 +191,24 @@ exports.postCambiarEstado = async (req, res) => {
         res.redirect('/admin/configurar_campania?mensaje=estado_ok');
     } catch (err) {
         console.error('Error cambiando estado:', err);
+        res.redirect('/admin/configurar_campania?error=error_estado');
+    }
+};
+
+exports.postActivarCampania = async (req, res) => {
+    try {
+        const { id_campania } = req.body;
+        if (!id_campania) {
+            return res.redirect('/admin/configurar_campania?error=sin_campania');
+        }
+        if (await Configuracion.hayOtraActiva()) {
+            return res.redirect('/admin/configurar_campania?error=ya_activa');
+        }
+        await Configuracion.actualizarCampania(parseInt(id_campania), { activo: true });
+        log('ADMIN', 'CAMPANIA', `id: ${req.session.usuario} — campaña ${id_campania} activada`);
+        res.redirect('/admin/configurar_campania?mensaje=campania_activada');
+    } catch (err) {
+        console.error('Error activando campaña:', err);
         res.redirect('/admin/configurar_campania?error=error_estado');
     }
 };
